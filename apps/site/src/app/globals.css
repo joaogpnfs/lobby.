@@ -1,7 +1,7 @@
 @import "tailwindcss";
 
 /*
-  PeopleOS site tokens. Base: Notion-like grammar (warm neutral canvas, 8px
+  Lobby site tokens. Base: Notion-like grammar (warm neutral canvas, 8px
   rectangular buttons, 12px cards, pastel tints), own palette.
   Pastel tints are semantic: each one is a product module color
   (rose=colaboradores, sky=férias, peach=documentos, mint=onboarding,

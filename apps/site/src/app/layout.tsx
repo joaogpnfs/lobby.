@@ -8,7 +8,7 @@ const figtree = Figtree({
 });
 
 export const metadata: Metadata = {
-  title: "PeopleOS",
+  title: "Lobby",
   description:
     "Colaboradores, férias, documentos, benefícios e ponto num lugar só. Gestão de pessoas para empresas brasileiras.",
 };

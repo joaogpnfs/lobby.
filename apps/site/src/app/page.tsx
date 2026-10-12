@@ -47,7 +47,7 @@ function Logo() {
         <circle cx="16.5" cy="10.5" r="3.5" className="fill-canvas" opacity="0.6" />
         <rect x="5" y="16" width="16" height="4" rx="2" className="fill-canvas" />
       </svg>
-      PeopleOS
+      Lobby
     </a>
   );
 }
@@ -459,7 +459,7 @@ function Access() {
       <Reveal className="mx-auto grid max-w-6xl items-center gap-12 rounded-[20px] border border-hairline bg-surface p-8 sm:p-12 md:grid-cols-2">
         <div className="grid gap-6">
           <h2 className="text-balance text-3xl font-bold tracking-tight sm:text-4xl sm:leading-[1.1]">
-            Quer usar o PeopleOS na sua empresa?
+            Quer usar o Lobby na sua empresa?
           </h2>
           <p className="text-lg text-slate">Deixe seu e-mail. Avisamos quando abrirmos as primeiras vagas.</p>
           <WaitlistForm />
@@ -482,7 +482,7 @@ function Footer() {
       <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-4 text-sm text-slate">
         <Logo />
         <p>Gestão de pessoas para empresas brasileiras.</p>
-        <p>© 2026 PeopleOS</p>
+        <p>© 2026 Lobby</p>
       </div>
     </footer>
   );
