@@ -120,3 +120,50 @@ body {
     scroll-behavior: auto;
   }
 }
+
+/*
+  Option B (/b): Cal.com-like grammar. Near-monochrome, black primary CTA,
+  gray surface cards with real product fragments, dark closing footer.
+  Status tints stay semantic. Same radius rule as A.
+  ponytail: two themes live side by side only until one is chosen; then delete the loser.
+*/
+.theme-b {
+  --canvas: #fefefe;
+  --surface: #f4f4f5;
+  --ink: #111111;
+  --charcoal: #374151;
+  --slate: #6b7280;
+  --hairline: #e5e7eb;
+  --hairline-strong: #d1d5db;
+  --accent: #111111;
+  --accent-pressed: #2a2a2a;
+  --on-accent: #fefefe;
+  --night: #101010;
+  --on-night: #f4f4f5;
+  --on-night-soft: #a1a1aa;
+  background: var(--canvas);
+  font-family: var(--font-geist), ui-sans-serif, system-ui, "Segoe UI", sans-serif;
+}
+
+@media (prefers-color-scheme: dark) {
+  .theme-b {
+    --canvas: #0e0e0f;
+    --surface: #18181b;
+    --ink: #f4f4f5;
+    --charcoal: #d4d4d8;
+    --slate: #a1a1aa;
+    --hairline: #27272a;
+    --hairline-strong: #3f3f46;
+    --accent: #f4f4f5;
+    --accent-pressed: #d4d4d8;
+    --on-accent: #111111;
+    --night: #1c1c1f;
+  }
+}
+
+@theme inline {
+  --color-night: var(--night);
+  --color-on-night: var(--on-night);
+  --color-on-night-soft: var(--on-night-soft);
+  --font-display: var(--font-cal), var(--font-geist), ui-sans-serif, sans-serif;
+}

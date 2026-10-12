@@ -18,6 +18,7 @@ import { RoleTabs } from "@/components/role-tabs";
 import { VacationPreview } from "@/components/vacation-preview";
 import { WaitlistForm } from "@/components/waitlist-form";
 import { people, type PersonSlug } from "@/lib/people";
+import { phases } from "@/lib/roadmap";
 
 const CTA = "Pedir acesso";
 
@@ -400,19 +401,6 @@ function Security() {
   );
 }
 
-const phases: { name: string; state?: "done" | "now" }[] = [
-  { name: "Planejamento", state: "done" },
-  { name: "Fundação técnica", state: "now" },
-  { name: "Login e permissões" },
-  { name: "Colaboradores" },
-  { name: "Documentos" },
-  { name: "Férias" },
-  { name: "Benefícios" },
-  { name: "Onboarding" },
-  { name: "Ponto" },
-  { name: "Auditoria e relatórios" },
-  { name: "Revisão de qualidade" },
-];
 
 function Progress() {
   return (
