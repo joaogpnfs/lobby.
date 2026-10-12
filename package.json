@@ -4,7 +4,7 @@
   "packageManager": "pnpm@11.1.3",
   "engines": { "node": ">=22" },
   "scripts": {
-    "dev:site": "pnpm --filter @peopleos/site dev",
+    "dev": "pnpm --filter @peopleos/site dev",
     "build": "pnpm -r build",
     "lint": "pnpm -r lint"
   }
