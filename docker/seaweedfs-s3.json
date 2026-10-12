@@ -1,0 +1,9 @@
+{
+  "identities": [
+    {
+      "name": "lobby",
+      "credentials": [{ "accessKey": "lobby", "secretKey": "lobby-s3-secret" }],
+      "actions": ["Admin", "Read", "Write", "List", "Tagging"]
+    }
+  ]
+}

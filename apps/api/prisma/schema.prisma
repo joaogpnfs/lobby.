@@ -1,0 +1,12 @@
+// Lobby database schema. Changes go through `pnpm db:migrate` (never `db push`).
+
+generator client {
+  provider            = "prisma-client"
+  output              = "../src/generated/prisma"
+  moduleFormat        = "esm"
+  importFileExtension = "js"
+}
+
+datasource db {
+  provider = "postgresql"
+}

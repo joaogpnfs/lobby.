@@ -1,0 +1,57 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: lobby
+          POSTGRES_PASSWORD: lobby
+          POSTGRES_DB: lobby_test
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U lobby -d lobby_test"
+          --health-interval 5s --health-timeout 3s --health-retries 10
+      redis:
+        image: redis:7-alpine
+        ports: ["6379:6379"]
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 5s --health-timeout 3s --health-retries 10
+
+    env:
+      NODE_ENV: test
+      DATABASE_URL: postgresql://lobby:lobby@localhost:5432/lobby_test
+      DATABASE_URL_TEST: postgresql://lobby:lobby@localhost:5432/lobby_test
+      REDIS_URL: redis://localhost:6379
+
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm format:check
+      - run: pnpm lint
+      - run: pnpm typecheck
+      - run: pnpm --filter @lobby/api db:deploy
+      - run: pnpm test
+      - run: pnpm build
+      # Runtime deps only: dev tooling (eslint) carries an unpatched braces advisory.
+      - run: pnpm audit --prod --audit-level high

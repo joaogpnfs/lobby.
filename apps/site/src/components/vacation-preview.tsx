@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { AnimatePresence, motion } from "motion/react";
-import { Check, X } from "@phosphor-icons/react";
+import { CheckIcon, XIcon } from "@phosphor-icons/react";
 import { person, type PersonSlug } from "@/lib/people";
 import { Avatar } from "@/components/avatar";
 
@@ -16,23 +16,16 @@ const initial: Request[] = [
   { id: 4, who: "jessica", period: "08/12 a 22/12", days: 15, status: "APPROVED" },
 ];
 
-const label: Record<Status, string> = {
-  PENDING: "Pendente",
-  APPROVED: "Aprovado",
-  REJECTED: "Recusado",
-};
-
-const chip: Record<Status, string> = {
-  PENDING: "bg-yellow text-yellow-ink",
-  APPROVED: "bg-mint text-mint-ink",
-  REJECTED: "bg-rose text-rose-ink",
+// [label, chip classes] per status.
+const statusChip: Record<Exclude<Status, "PENDING">, [string, string]> = {
+  APPROVED: ["Aprovado", "bg-mint text-mint-ink"],
+  REJECTED: ["Recusado", "bg-rose text-rose-ink"],
 };
 
 export function VacationPreview() {
   const [rows, setRows] = useState(initial);
   const pending = rows.filter((r) => r.status === "PENDING").length;
-  const decide = (id: number, status: Status) =>
-    setRows((rs) => rs.map((r) => (r.id === id ? { ...r, status } : r)));
+  const decide = (id: number, status: Status) => setRows((rs) => rs.map((r) => (r.id === id ? { ...r, status } : r)));
 
   return (
     <div className="overflow-hidden rounded-[20px] border border-hairline bg-canvas text-left shadow-mock">
@@ -81,27 +74,27 @@ export function VacationPreview() {
                         onClick={() => decide(r.id, "REJECTED")}
                         className="inline-flex items-center gap-1.5 rounded-lg border border-hairline-strong px-3 py-1.5 text-sm font-medium transition active:scale-[0.98] hover:bg-surface"
                       >
-                        <X size={14} weight="bold" aria-hidden /> Recusar
+                        <XIcon size={14} weight="bold" aria-hidden /> Recusar
                       </button>
                       <button
                         type="button"
                         onClick={() => decide(r.id, "APPROVED")}
                         className="inline-flex items-center gap-1.5 rounded-lg bg-accent px-3 py-1.5 text-sm font-medium text-on-accent transition active:scale-[0.98] hover:bg-accent-pressed"
                       >
-                        <Check size={14} weight="bold" aria-hidden /> Aprovar
+                        <CheckIcon size={14} weight="bold" aria-hidden /> Aprovar
                       </button>
                     </motion.div>
                   ) : (
                     <motion.span
                       key="status"
                       role="status"
-                      className={`rounded-full px-2.5 py-1 text-xs font-semibold ${chip[r.status]}`}
+                      className={`rounded-full px-2.5 py-1 text-xs font-semibold ${statusChip[r.status][1]}`}
                       initial={{ opacity: 0, y: 4 }}
                       animate={{ opacity: 1, y: 0 }}
                       exit={{ opacity: 0 }}
                       transition={{ type: "spring", stiffness: 300, damping: 24 }}
                     >
-                      {label[r.status]}
+                      {statusChip[r.status][0]}
                     </motion.span>
                   )}
                 </AnimatePresence>

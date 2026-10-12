@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { AnimatePresence, motion } from "motion/react";
-import { CheckCircle } from "@phosphor-icons/react";
+import { CheckCircleIcon } from "@phosphor-icons/react";
 import { Avatar } from "@/components/avatar";
 import { person, type PersonSlug } from "@/lib/people";
 
@@ -59,9 +59,7 @@ export function RoleTabs() {
             aria-controls="role-panel"
             onClick={() => setActive(r.id)}
             className={`rounded-full border px-4 py-2 text-sm font-medium transition-colors ${
-              r.id === active
-                ? "border-ink bg-ink text-canvas"
-                : "border-hairline text-slate hover:text-ink"
+              r.id === active ? "border-accent bg-accent text-on-accent" : "border-hairline text-slate hover:text-ink"
             }`}
           >
             {r.tab}
@@ -91,7 +89,7 @@ export function RoleTabs() {
           <ul className="grid content-center gap-4">
             {role.items.map((item) => (
               <li key={item} className="flex gap-3 text-lg leading-snug text-charcoal">
-                <CheckCircle size={24} weight="duotone" className="mt-0.5 shrink-0 text-accent" aria-hidden />
+                <CheckCircleIcon size={24} weight="duotone" className="mt-0.5 shrink-0 text-accent" aria-hidden />
                 {item}
               </li>
             ))}

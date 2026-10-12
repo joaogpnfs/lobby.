@@ -32,17 +32,3 @@ export function Reveal({
     </motion.div>
   );
 }
-
-// Faces around the hero pop in one after another on load.
-export function PopIn({ children, index, className }: { children: ReactNode; index: number; className?: string }) {
-  return (
-    <motion.div
-      className={className}
-      initial={{ scale: 0.6 }}
-      animate={{ scale: 1 }}
-      transition={{ type: "spring", stiffness: 260, damping: 18, delay: 0.15 + index * 0.07 }}
-    >
-      {children}
-    </motion.div>
-  );
-}

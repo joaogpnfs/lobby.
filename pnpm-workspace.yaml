@@ -3,5 +3,14 @@ packages:
   - "packages/*"
 
 allowBuilds:
+  "@prisma/engines": true
+  "@swc/core": true
+  prisma: true
+  "@scarf/scarf": false
   sharp: false
   unrs-resolver: false
+
+# Patched versions of vulnerable transitive deps (pnpm audit). Remove once upstream bumps them.
+overrides:
+  deepmerge-ts: ^8.0.0
+  mysql2: ^3.22.0

@@ -2,10 +2,20 @@
   "name": "lobby",
   "private": true,
   "packageManager": "pnpm@11.1.3",
-  "engines": { "node": ">=22" },
+  "engines": {
+    "node": ">=22"
+  },
   "scripts": {
-    "dev": "pnpm --filter @lobby/site dev",
+    "dev": "pnpm --parallel --filter @lobby/types --filter @lobby/api --filter @lobby/web dev",
+    "dev:site": "pnpm --filter @lobby/site dev",
     "build": "pnpm -r build",
-    "lint": "pnpm -r lint"
+    "lint": "pnpm -r lint",
+    "typecheck": "pnpm -r typecheck",
+    "test": "pnpm -r test",
+    "format": "prettier --write .",
+    "format:check": "prettier --check ."
+  },
+  "devDependencies": {
+    "prettier": "^3.9.10"
   }
 }

@@ -1,14 +1,12 @@
 import Image from "next/image";
 import { person, type PersonSlug, type Tint } from "@/lib/people";
 
-// Line-art faces need a light "paper" behind them in both themes, so these
-// stay fixed instead of following the dark-mode tint tokens.
+// Light "paper" behind each line-art face.
 const paper: Record<Tint, string> = {
   sky: "#dfeafb",
   mint: "#dcf2e3",
   peach: "#fde6d3",
   lavender: "#e8e3f6",
-  yellow: "#fbf1c7",
   rose: "#fbe1ea",
 };
 

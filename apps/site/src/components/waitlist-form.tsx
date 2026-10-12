@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, type FormEvent } from "react";
-import { ArrowRight, CircleNotch } from "@phosphor-icons/react";
+import { ArrowRightIcon, CircleNotchIcon } from "@phosphor-icons/react";
 
 type State = { kind: "idle" } | { kind: "sending" } | { kind: "done" } | { kind: "error"; message: string };
 
@@ -58,9 +58,9 @@ export function WaitlistForm() {
           className="inline-flex h-11 items-center justify-center gap-2 whitespace-nowrap rounded-lg bg-accent px-5 font-medium text-on-accent transition hover:bg-accent-pressed active:scale-[0.98] disabled:opacity-70"
         >
           {state.kind === "sending" ? (
-            <CircleNotch size={18} className="animate-spin" aria-hidden />
+            <CircleNotchIcon size={18} className="animate-spin" aria-hidden />
           ) : (
-            <ArrowRight size={18} weight="bold" aria-hidden />
+            <ArrowRightIcon size={18} weight="bold" aria-hidden />
           )}
           Pedir acesso
         </button>

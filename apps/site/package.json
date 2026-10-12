@@ -3,11 +3,12 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev",
+    "dev": "next dev -p 3002",
     "build": "next build",
-    "start": "next start",
+    "start": "next start -p 3002",
     "lint": "eslint",
-    "avatars": "node --experimental-strip-types scripts/gen-avatars.mts"
+    "avatars": "node --experimental-strip-types scripts/gen-avatars.mts",
+    "typecheck": "next typegen && tsc --noEmit"
   },
   "dependencies": {
     "@dicebear/collection": "^9.4.2",

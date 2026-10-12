@@ -1,0 +1,6 @@
+pnpm-lock.yaml
+**/.next
+**/dist
+**/generated
+apps/site/public/people
+prompt.txt
