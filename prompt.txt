@@ -1,0 +1,1648 @@
+# PEOPLEOS — HR SaaS PLATFORM
+
+Você é o principal engenheiro de software responsável por projetar e implementar um SaaS completo de gestão de pessoas inspirado em plataformas como Buk.
+
+O objetivo NÃO é copiar código, marca, identidade visual ou conteúdo proprietário do Buk.
+
+Queremos construir um produto original, chamado provisoriamente de **PeopleOS**, utilizando conceitos comuns de sistemas modernos de HR Tech.
+
+---
+
+# 1. OBJETIVO DO PRODUTO
+
+Construir uma plataforma SaaS B2B multi-tenant para empresas gerenciarem seus colaboradores.
+
+O sistema deverá permitir:
+
+* cadastro e gestão de empresas
+* usuários e permissões
+* colaboradores
+* departamentos
+* cargos
+* unidades/filiais
+* documentos
+* férias
+* benefícios
+* onboarding
+* desligamentos
+* ponto/registro de jornada
+* notificações
+* dashboards
+* auditoria
+* configurações da organização
+
+A aplicação deve ser construída pensando desde o início como um produto SaaS real, e não apenas como um CRUD demonstrativo.
+
+---
+
+# 2. STACK OBRIGATÓRIA
+
+## Frontend
+
+* Next.js
+* React
+* TypeScript
+* Tailwind CSS
+* shadcn/ui
+* TanStack Query
+* React Hook Form
+* Zod
+
+## Backend
+
+* Node.js
+* NestJS
+* TypeScript
+* REST API
+* Prisma ORM
+
+## Database
+
+* PostgreSQL
+
+## Cache / Jobs
+
+* Redis
+* BullMQ
+
+## Authentication
+
+* JWT
+* Access Token
+* Refresh Token
+* RBAC
+* Argon2 ou bcrypt para senha
+
+## Storage
+
+* AWS S3
+
+## Testing
+
+* Vitest/Jest para unitários
+* Supertest para API
+* Playwright para E2E
+
+## DevOps
+
+* Docker
+* Docker Compose
+* GitHub Actions
+
+## Observability
+
+* Pino para logs
+* Sentry preparado para integração
+
+---
+
+# 3. PRINCÍPIOS DE ARQUITETURA
+
+Priorize:
+
+* código simples
+* baixo acoplamento
+* alta coesão
+* separação clara de responsabilidades
+* tipagem forte
+* segurança
+* testabilidade
+* escalabilidade razoável
+* facilidade de manutenção
+
+NÃO criar abstrações desnecessárias.
+
+NÃO criar "enterprise architecture" exagerada sem necessidade.
+
+NÃO utilizar `any`, exceto quando absolutamente inevitável e documentado.
+
+Evite duplicação.
+
+Não coloque regra de negócio diretamente em controllers.
+
+Controllers devem ser responsáveis principalmente por:
+
+1. receber request
+2. validar input
+3. chamar o serviço/use case
+4. retornar response
+
+A lógica de negócio deve ficar em services/use cases apropriados.
+
+---
+
+# 4. ESTRUTURA DO PROJETO
+
+Preferir um monorepo:
+
+```text
+peopleos/
+├── apps/
+│   ├── web/
+│   └── api/
+│
+├── packages/
+│   ├── types/
+│   ├── eslint-config/
+│   └── tsconfig/
+│
+├── docker/
+├── docs/
+├── .github/
+│   └── workflows/
+│
+├── docker-compose.yml
+├── package.json
+├── pnpm-workspace.yaml
+└── README.md
+```
+
+Frontend:
+
+```text
+apps/web/
+```
+
+Backend:
+
+```text
+apps/api/
+```
+
+Não compartilhar código entre frontend e backend simplesmente para evitar duplicação.
+
+Compartilhe apenas aquilo que realmente representa um contrato comum, como tipos ou schemas cuidadosamente selecionados.
+
+---
+
+# 5. MULTI-TENANCY
+
+Esse é um dos requisitos mais importantes.
+
+O sistema deve ser multi-tenant desde o início.
+
+Modelo conceitual:
+
+```text
+Organization
+│
+├── Users
+├── Employees
+├── Departments
+├── Positions
+├── Branches
+├── Documents
+├── Vacations
+├── Benefits
+├── Onboarding
+└── AuditLogs
+```
+
+As entidades pertencentes à organização devem possuir:
+
+```text
+organizationId
+```
+
+ou uma relação equivalente.
+
+NUNCA confiar somente no `organizationId` enviado pelo frontend.
+
+O backend deve determinar a organização a partir do contexto autenticado do usuário.
+
+Exemplo:
+
+```text
+JWT
+ ↓
+Authenticated User
+ ↓
+Organization Membership
+ ↓
+Request Context
+ ↓
+Service
+ ↓
+Database query scoped by organization
+```
+
+Sempre garantir isolamento entre tenants.
+
+Um usuário da Organization A jamais pode acessar dados da Organization B.
+
+Criar testes especificamente para esse cenário.
+
+---
+
+# 6. RBAC
+
+Criar sistema de permissões.
+
+Inicialmente teremos:
+
+```text
+SUPER_ADMIN
+ORG_ADMIN
+HR_MANAGER
+MANAGER
+EMPLOYEE
+```
+
+Permissões devem ser granulares.
+
+Exemplos:
+
+```text
+employees:read
+employees:create
+employees:update
+employees:delete
+
+documents:read
+documents:create
+documents:delete
+
+vacations:read
+vacations:request
+vacations:approve
+```
+
+Não espalhar verificações como:
+
+```typescript
+if (user.role === "ADMIN")
+```
+
+por toda a aplicação.
+
+Criar uma abordagem centralizada de authorization/guards/decorators.
+
+---
+
+# 7. DOMÍNIO PRINCIPAL
+
+## Organization
+
+Campos iniciais:
+
+```text
+id
+name
+legalName
+document
+email
+phone
+logo
+timezone
+createdAt
+updatedAt
+```
+
+---
+
+# 8. USERS
+
+Usuário representa uma pessoa que pode acessar o sistema.
+
+Campos:
+
+```text
+id
+email
+passwordHash
+name
+status
+createdAt
+updatedAt
+```
+
+Relacionamento com Organization deve permitir futuramente que uma pessoa tenha membership em organizações diferentes.
+
+Considere uma estrutura:
+
+```text
+User
+Organization
+OrganizationMembership
+```
+
+em vez de acoplar diretamente User → Organization.
+
+---
+
+# 9. EMPLOYEES
+
+Criar módulo completo de colaboradores.
+
+Dados:
+
+```text
+id
+organizationId
+firstName
+lastName
+preferredName
+email
+phone
+birthDate
+document
+hireDate
+terminationDate
+status
+departmentId
+positionId
+managerId
+branchId
+avatar
+createdAt
+updatedAt
+```
+
+Status:
+
+```text
+ACTIVE
+ON_LEAVE
+TERMINATED
+PENDING
+```
+
+Evitar armazenar informações sensíveis sem necessidade.
+
+---
+
+# 10. DEPARTMENTS
+
+Exemplo:
+
+```text
+Engineering
+Finance
+Marketing
+HR
+Sales
+Operations
+```
+
+Campos:
+
+```text
+id
+organizationId
+name
+description
+managerId
+createdAt
+updatedAt
+```
+
+---
+
+# 11. POSITIONS
+
+Exemplo:
+
+```text
+Software Engineer
+Product Manager
+HR Analyst
+Sales Representative
+```
+
+Campos:
+
+```text
+id
+organizationId
+name
+description
+level
+```
+
+---
+
+# 12. BRANCHES
+
+Permitir múltiplas unidades:
+
+```text
+São Paulo
+Rio de Janeiro
+Teresina
+Remote
+```
+
+Campos:
+
+```text
+id
+organizationId
+name
+address
+city
+state
+country
+timezone
+```
+
+---
+
+# 13. DOCUMENTS
+
+Criar sistema de documentos utilizando S3.
+
+Fluxo:
+
+```text
+Frontend
+ ↓
+API
+ ↓
+Generate presigned URL
+ ↓
+Frontend uploads directly to S3
+ ↓
+Frontend confirms upload
+ ↓
+API stores metadata
+```
+
+Não enviar arquivos grandes através da API sem necessidade.
+
+Document metadata:
+
+```text
+id
+organizationId
+employeeId
+name
+type
+mimeType
+size
+storageKey
+status
+uploadedBy
+createdAt
+updatedAt
+```
+
+Tipos:
+
+```text
+CONTRACT
+IDENTITY
+CERTIFICATE
+PAYSLIP
+MEDICAL
+OTHER
+```
+
+Nunca expor diretamente o bucket.
+
+Arquivos privados devem utilizar URLs assinadas temporárias.
+
+---
+
+# 14. VACATIONS
+
+Criar workflow:
+
+```text
+Employee
+ ↓
+Request vacation
+ ↓
+PENDING
+ ↓
+Manager/HR approval
+ ↓
+APPROVED
+ ↓
+Vacation period
+ ↓
+COMPLETED
+```
+
+Status:
+
+```text
+PENDING
+APPROVED
+REJECTED
+CANCELLED
+COMPLETED
+```
+
+Registrar:
+
+* período
+* quantidade de dias
+* motivo
+* solicitante
+* aprovador
+* data da aprovação
+* comentário
+
+Evitar conflitos de datas.
+
+Criar validações para impedir períodos inválidos ou sobrepostos.
+
+---
+
+# 15. BENEFITS
+
+Criar estrutura para:
+
+```text
+Benefit
+EmployeeBenefit
+```
+
+Exemplos:
+
+```text
+Meal Voucher
+Food Voucher
+Health Insurance
+Dental Insurance
+Transportation
+```
+
+Permitir:
+
+* cadastrar benefício
+* associar funcionário
+* definir valor
+* definir data de início
+* cancelar benefício
+
+---
+
+# 16. ONBOARDING
+
+Criar onboarding configurável.
+
+Exemplo:
+
+```text
+New Employee
+ ↓
+Create account
+ ↓
+Upload documents
+ ↓
+Sign contract
+ ↓
+Assign benefits
+ ↓
+Complete profile
+ ↓
+Onboarding completed
+```
+
+Criar:
+
+```text
+OnboardingTemplate
+OnboardingProcess
+OnboardingTask
+```
+
+Tasks devem possuir:
+
+```text
+PENDING
+IN_PROGRESS
+COMPLETED
+```
+
+---
+
+# 17. TIME TRACKING
+
+Criar uma primeira versão simples de ponto.
+
+Eventos:
+
+```text
+CLOCK_IN
+BREAK_START
+BREAK_END
+CLOCK_OUT
+```
+
+Registrar:
+
+```text
+employeeId
+timestamp
+type
+source
+```
+
+Criar endpoint para:
+
+```text
+clock in
+start break
+end break
+clock out
+```
+
+Calcular jornada posteriormente.
+
+Não tentar implementar legislação trabalhista brasileira completa nesta primeira versão.
+
+---
+
+# 18. NOTIFICATIONS
+
+Criar infraestrutura preparada para notificações assíncronas.
+
+Arquitetura:
+
+```text
+Application
+ ↓
+BullMQ
+ ↓
+Redis
+ ↓
+Worker
+ ↓
+Notification provider
+```
+
+Criar inicialmente:
+
+```text
+EMAIL
+IN_APP
+```
+
+Casos:
+
+```text
+Vacation requested
+Vacation approved
+Vacation rejected
+Document expiring
+Onboarding task assigned
+```
+
+O sistema deve ser idempotente quando necessário.
+
+---
+
+# 19. AUDIT LOG
+
+Criar módulo de auditoria.
+
+Registrar eventos importantes:
+
+```text
+LOGIN
+EMPLOYEE_CREATED
+EMPLOYEE_UPDATED
+EMPLOYEE_DELETED
+DOCUMENT_UPLOADED
+VACATION_REQUESTED
+VACATION_APPROVED
+VACATION_REJECTED
+BENEFIT_ASSIGNED
+```
+
+Campos:
+
+```text
+id
+organizationId
+actorId
+action
+entity
+entityId
+metadata
+ipAddress
+userAgent
+createdAt
+```
+
+Nunca armazenar senha, tokens ou informações extremamente sensíveis no metadata.
+
+---
+
+# 20. DASHBOARD
+
+Criar dashboard inicial da organização.
+
+Mostrar:
+
+```text
+Total employees
+Active employees
+New employees
+Employees on leave
+Pending vacations
+Upcoming birthdays
+Documents expiring
+Pending onboarding tasks
+```
+
+Evitar N+1 queries.
+
+Usar queries agregadas eficientes.
+
+Adicionar índices necessários no PostgreSQL.
+
+---
+
+# 21. FRONTEND
+
+Interface moderna de SaaS B2B.
+
+Visual:
+
+* clean
+* profissional
+* minimalista
+* bastante espaço em branco
+* azul como cor principal
+* tons neutros
+* responsivo
+
+Não fazer uma cópia visual do Buk.
+
+Criar identidade própria.
+
+Layout:
+
+```text
+Sidebar
+│
+├── Dashboard
+├── Employees
+├── Departments
+├── Positions
+├── Documents
+├── Vacations
+├── Benefits
+├── Onboarding
+├── Time Tracking
+├── Reports
+└── Settings
+```
+
+Desktop first, mas responsivo.
+
+---
+
+# 22. COMPONENTES FRONTEND
+
+Criar componentes reutilizáveis:
+
+```text
+DataTable
+PageHeader
+SearchInput
+FilterBar
+StatusBadge
+ConfirmDialog
+FormField
+EmptyState
+LoadingState
+ErrorState
+Pagination
+Modal
+Drawer
+StatsCard
+```
+
+Não duplicar componentes de UI.
+
+Utilizar shadcn/ui como base.
+
+---
+
+# 23. DATA FETCHING
+
+Usar TanStack Query.
+
+Evitar:
+
+```text
+fetch()
+```
+
+espalhado pelos componentes.
+
+Criar hooks:
+
+```text
+useEmployees()
+useEmployee()
+useCreateEmployee()
+useUpdateEmployee()
+useVacations()
+useDocuments()
+```
+
+Separar:
+
+```text
+API client
+queries
+mutations
+UI
+```
+
+---
+
+# 24. FORMULÁRIOS
+
+Usar:
+
+```text
+React Hook Form
++
+Zod
+```
+
+Validação deve existir:
+
+1. no frontend para UX
+2. no backend para segurança
+
+Nunca confiar apenas na validação do frontend.
+
+---
+
+# 25. API
+
+Criar REST API organizada.
+
+Exemplo:
+
+```text
+POST   /auth/login
+POST   /auth/refresh
+POST   /auth/logout
+
+GET    /organizations/me
+
+GET    /employees
+POST   /employees
+GET    /employees/:id
+PATCH  /employees/:id
+DELETE /employees/:id
+
+GET    /departments
+POST   /departments
+
+GET    /positions
+POST   /positions
+
+GET    /documents
+POST   /documents/presigned-url
+
+GET    /vacations
+POST   /vacations
+POST   /vacations/:id/approve
+POST   /vacations/:id/reject
+
+GET    /benefits
+POST   /benefits
+
+GET    /onboarding
+POST   /onboarding
+
+POST   /time/clock-in
+POST   /time/break-start
+POST   /time/break-end
+POST   /time/clock-out
+
+GET    /audit-logs
+```
+
+Versionar API:
+
+```text
+/api/v1
+```
+
+---
+
+# 26. DATABASE
+
+Utilizar Prisma.
+
+Criar migrations corretamente.
+
+Não utilizar `db push` como solução permanente.
+
+Adicionar índices pensando nos padrões de consulta.
+
+Especialmente:
+
+```text
+organizationId
+organizationId + email
+organizationId + status
+organizationId + departmentId
+organizationId + createdAt
+```
+
+Não criar índices indiscriminadamente.
+
+---
+
+# 27. TRANSAÇÕES
+
+Usar Prisma transactions quando uma operação alterar múltiplas entidades que precisam permanecer consistentes.
+
+Exemplo:
+
+```text
+Create employee
++
+Create onboarding
++
+Create onboarding tasks
+```
+
+deve ser transacional quando apropriado.
+
+---
+
+# 28. ERROR HANDLING
+
+API deve possuir formato consistente:
+
+```json
+{
+  "success": false,
+  "error": {
+    "code": "EMPLOYEE_NOT_FOUND",
+    "message": "Employee not found"
+  }
+}
+```
+
+Não retornar stack traces para usuários.
+
+Erros inesperados devem ser registrados nos logs.
+
+---
+
+# 29. SECURITY
+
+Implementar desde o início:
+
+* password hashing
+* JWT validation
+* refresh token rotation quando apropriado
+* RBAC
+* tenant isolation
+* input validation
+* rate limiting
+* CORS configurado
+* security headers
+* SQL injection protection via Prisma
+* XSS protection
+* CSRF consideration
+* secure cookies quando aplicável
+* secrets via environment variables
+
+Nunca commitar:
+
+```text
+.env
+AWS credentials
+JWT secrets
+database passwords
+API keys
+```
+
+Criar:
+
+```text
+.env.example
+```
+
+---
+
+# 30. LOGGING
+
+Utilizar Pino.
+
+Logs estruturados.
+
+Exemplo:
+
+```json
+{
+  "level": "info",
+  "event": "employee.created",
+  "organizationId": "...",
+  "employeeId": "...",
+  "actorId": "..."
+}
+```
+
+Não logar:
+
+* passwords
+* JWTs
+* refresh tokens
+* documentos pessoais completos
+* secrets
+
+---
+
+# 31. TESTES
+
+Não criar testes apenas para aumentar cobertura.
+
+Priorizar testes de comportamento e regras críticas.
+
+Obrigatório testar:
+
+### Authentication
+
+* login válido
+* senha inválida
+* token inválido
+* refresh token
+
+### Multi-tenancy
+
+CRÍTICO:
+
+```text
+Organization A
+cannot access
+Organization B
+```
+
+### RBAC
+
+Usuário sem permissão não pode executar ação protegida.
+
+### Employees
+
+* create
+* update
+* delete
+* list
+* filters
+
+### Vacations
+
+* request
+* approve
+* reject
+* conflicting periods
+
+### Documents
+
+* upload metadata
+* access control
+* signed URL
+
+---
+
+# 32. E2E
+
+Criar pelo menos um fluxo completo:
+
+```text
+Register organization
+ ↓
+Login
+ ↓
+Create department
+ ↓
+Create position
+ ↓
+Create employee
+ ↓
+Upload document
+ ↓
+Request vacation
+ ↓
+Approve vacation
+ ↓
+View dashboard
+```
+
+---
+
+# 33. DOCKER
+
+Criar Docker Compose para desenvolvimento:
+
+```text
+postgres
+redis
+```
+
+A aplicação pode rodar localmente durante desenvolvimento.
+
+Criar Dockerfiles para:
+
+```text
+web
+api
+```
+
+quando fizer sentido.
+
+---
+
+# 34. CI/CD
+
+Criar GitHub Actions para:
+
+```text
+install
+lint
+typecheck
+test
+build
+```
+
+Não fazer deploy automático para produção inicialmente sem uma configuração clara.
+
+---
+
+# 35. DOCUMENTAÇÃO
+
+Criar:
+
+```text
+README.md
+docs/
+```
+
+Documentar:
+
+* arquitetura
+* setup local
+* environment variables
+* database
+* migrations
+* authentication
+* multi-tenancy
+* API
+* deployment
+* decisões arquiteturais
+
+Criar também:
+
+```text
+docs/architecture.md
+docs/database.md
+docs/api.md
+docs/development.md
+```
+
+---
+
+# 36. OPENAPI
+
+Adicionar documentação OpenAPI/Swagger no backend.
+
+Todos os endpoints públicos da API devem possuir documentação suficiente.
+
+---
+
+# 37. ENVIRONMENT VARIABLES
+
+Criar `.env.example`.
+
+Exemplo:
+
+```env
+DATABASE_URL=
+REDIS_URL=
+
+JWT_ACCESS_SECRET=
+JWT_REFRESH_SECRET=
+
+AWS_REGION=
+AWS_ACCESS_KEY_ID=
+AWS_SECRET_ACCESS_KEY=
+AWS_S3_BUCKET=
+
+SENTRY_DSN=
+```
+
+Nunca colocar valores reais.
+
+---
+
+# 38. DESENVOLVIMENTO POR FASES
+
+NÃO tente implementar tudo de uma vez.
+
+Siga esta ordem.
+
+## PHASE 0 — DISCOVERY
+
+Antes de escrever código:
+
+1. analisar o projeto atual
+2. identificar arquivos existentes
+3. verificar package manager
+4. verificar Node version
+5. verificar estrutura
+6. identificar conflitos
+7. propor arquitetura
+8. criar plano de implementação
+
+NÃO alterar código nesta fase sem necessidade.
+
+---
+
+## PHASE 1 — FOUNDATION
+
+Implementar:
+
+* monorepo
+* Next.js
+* NestJS
+* PostgreSQL
+* Prisma
+* Docker Compose
+* Redis
+* lint
+* formatting
+* environment configuration
+* base error handling
+* logging
+* Swagger
+
+---
+
+## PHASE 2 — AUTH
+
+Implementar:
+
+* User
+* Organization
+* OrganizationMembership
+* login
+* register
+* refresh
+* logout
+* password hashing
+* JWT
+* RBAC
+
+Criar testes.
+
+---
+
+## PHASE 3 — EMPLOYEE MANAGEMENT
+
+Implementar:
+
+* employees
+* departments
+* positions
+* branches
+* manager relationships
+* filters
+* pagination
+* search
+
+Criar frontend completo.
+
+---
+
+## PHASE 4 — DOCUMENTS
+
+Implementar:
+
+* S3
+* presigned URLs
+* document metadata
+* employee documents
+* permissions
+* secure downloads
+
+---
+
+## PHASE 5 — VACATIONS
+
+Implementar:
+
+* request
+* approval
+* rejection
+* validation
+* dashboard
+* notifications
+
+---
+
+## PHASE 6 — BENEFITS
+
+Implementar:
+
+* benefits
+* employee benefits
+* activation
+* cancellation
+
+---
+
+## PHASE 7 — ONBOARDING
+
+Implementar:
+
+* templates
+* processes
+* tasks
+* progress
+* notifications
+
+---
+
+## PHASE 8 — TIME TRACKING
+
+Implementar:
+
+* clock in
+* break
+* clock out
+* daily history
+* basic calculations
+
+---
+
+## PHASE 9 — AUDIT + REPORTS
+
+Implementar:
+
+* audit logs
+* reports
+* dashboard improvements
+* export CSV
+
+---
+
+## PHASE 10 — QUALITY
+
+Revisar:
+
+* security
+* performance
+* indexes
+* N+1
+* tenant isolation
+* authorization
+* tests
+* accessibility
+* error states
+* loading states
+* empty states
+
+---
+
+# 39. COMO VOCÊ DEVE TRABALHAR
+
+Você é um agente de engenharia de software.
+
+Antes de implementar uma funcionalidade complexa:
+
+1. entenda o contexto
+2. identifique dependências
+3. faça um plano curto
+4. implemente
+5. execute testes
+6. faça typecheck
+7. faça lint
+8. revise o código
+9. documente decisões relevantes
+
+Não perguntar minha opinião sobre detalhes triviais.
+
+Tome decisões razoáveis e continue.
+
+Pergunte apenas quando houver uma decisão realmente ambígua ou que possa mudar significativamente a arquitetura.
+
+---
+
+# 40. REGRA IMPORTANTE — NÃO QUEBRAR O PROJETO
+
+Antes de modificar arquivos importantes:
+
+* leia o código existente
+* entenda as dependências
+* procure usos existentes
+* preserve APIs existentes quando possível
+
+Não reescreva arquivos inteiros sem necessidade.
+
+Prefira mudanças pequenas e incrementais.
+
+---
+
+# 41. GIT
+
+Faça commits lógicos.
+
+Exemplos:
+
+```text
+feat(auth): implement organization authentication
+feat(employees): add employee management
+feat(vacations): add vacation workflow
+feat(documents): add S3 document storage
+fix(auth): prevent cross-tenant access
+test(employees): add employee service tests
+```
+
+Não criar commits gigantes contendo várias funcionalidades não relacionadas.
+
+---
+
+# 42. DEFINITION OF DONE
+
+Uma funcionalidade só está pronta quando:
+
+* código implementado
+* TypeScript sem erros
+* lint passando
+* testes relevantes passando
+* migrations funcionando
+* frontend integrado
+* loading state
+* error state
+* empty state
+* authorization implementada
+* tenant isolation validada
+* documentação atualizada quando necessário
+
+---
+
+# 43. PERFORMANCE
+
+Não otimizar prematuramente.
+
+Porém, desde o início:
+
+* evitar N+1
+* utilizar pagination
+* utilizar índices adequados
+* evitar queries desnecessárias
+* não retornar dados excessivos
+* usar select/include conscientemente no Prisma
+* utilizar cache apenas quando houver necessidade real
+
+---
+
+# 44. UX
+
+Toda tela precisa considerar:
+
+```text
+Loading
+Empty
+Error
+Success
+```
+
+Exemplo:
+
+Não mostrar simplesmente:
+
+```text
+No data
+```
+
+Criar empty states úteis:
+
+```text
+No employees yet
+
+Add your first employee to start building your organization.
+
+[Add employee]
+```
+
+---
+
+# 45. AI
+
+IA não é requisito para o MVP.
+
+Não adicionar IA apenas porque é um projeto moderno.
+
+Quando existir um caso de uso real, podemos adicionar posteriormente:
+
+* geração de descrições de cargos
+* resumo de documentos
+* análise de feedback
+* assistente de RH
+* classificação automática de documentos
+
+Mas o core do produto deve funcionar sem IA.
+
+---
+
+# 46. RESULTADO FINAL ESPERADO
+
+Ao final teremos um SaaS funcional onde:
+
+```text
+Company
+   ↓
+Admin creates organization
+   ↓
+Adds HR users
+   ↓
+Creates departments
+   ↓
+Creates positions
+   ↓
+Adds employees
+   ↓
+Uploads documents
+   ↓
+Employees request vacations
+   ↓
+Managers approve
+   ↓
+Benefits are assigned
+   ↓
+Onboarding is managed
+   ↓
+Dashboard displays HR metrics
+```
+
+O projeto deve parecer um produto comercial real.
+
+Não quero apenas telas bonitas.
+
+Quero:
+
+```text
+GOOD UI
++
+GOOD UX
++
+SOLID BACKEND
++
+SECURITY
++
+MULTI-TENANCY
++
+TESTS
++
+DOCUMENTATION
++
+PRODUCTION-READY ARCHITECTURE
+```
+
+---
+
+# 47. PRIMEIRA TAREFA
+
+NÃO comece implementando funcionalidades imediatamente.
+
+Primeiro:
+
+1. analise o repositório
+2. analise os arquivos existentes
+3. analise package.json
+4. analise configurações
+5. identifique o que já existe
+6. proponha a estrutura final
+7. crie um `PROJECT_PLAN.md`
+
+O `PROJECT_PLAN.md` deve conter:
+
+```text
+1. Product overview
+2. Architecture
+3. Tech stack
+4. Folder structure
+5. Database model
+6. Authentication strategy
+7. Multi-tenancy strategy
+8. RBAC strategy
+9. API structure
+10. Frontend structure
+11. Development phases
+12. Testing strategy
+13. Security strategy
+14. Deployment strategy
+15. Open questions
+```
+
+Depois de criar o plano, **pare e me mostre o plano antes de começar a implementação da Phase 1**.
+
+Não invente requisitos que não foram definidos.
+
+Quando houver uma decisão técnica razoável, tome a decisão e documente-a no `PROJECT_PLAN.md`.
