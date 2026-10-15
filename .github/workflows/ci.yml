@@ -37,6 +37,7 @@ jobs:
       DATABASE_URL: postgresql://lobby:lobby@localhost:5432/lobby_test
       DATABASE_URL_TEST: postgresql://lobby:lobby@localhost:5432/lobby_test
       REDIS_URL: redis://localhost:6379
+      JWT_ACCESS_SECRET: ci-only-access-secret-at-least-32-characters
 
     steps:
       - uses: actions/checkout@v4

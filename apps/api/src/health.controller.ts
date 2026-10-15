@@ -2,6 +2,7 @@ import { Controller, Get, HttpStatus, Res } from "@nestjs/common";
 import { ApiOperation, ApiTags } from "@nestjs/swagger";
 import type { FastifyReply } from "fastify";
 import type { HealthStatus } from "@lobby/types";
+import { Public } from "./common/decorators.js";
 import { PrismaService } from "./prisma.service.js";
 import { RedisService } from "./redis.service.js";
 
@@ -13,6 +14,7 @@ const check = (probe: () => Promise<unknown>): Promise<"ok" | "down"> =>
     new Promise<"down">((resolve) => setTimeout(() => resolve("down"), TIMEOUT_MS)),
   ]).catch(() => "down" as const);
 
+@Public()
 @ApiTags("health")
 @Controller("health")
 export class HealthController {

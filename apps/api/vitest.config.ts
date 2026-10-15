@@ -7,5 +7,7 @@ export default defineConfig({
   test: {
     include: ["test/**/*.spec.ts"],
     setupFiles: ["test/setup.ts"],
+    // e2e suites share one test database and truncate it between tests.
+    fileParallelism: false,
   },
 });

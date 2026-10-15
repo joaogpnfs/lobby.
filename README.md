@@ -5,11 +5,12 @@ Gestão de pessoas para empresas brasileiras (SaaS B2B multi-tenant). Plano: [PR
 ## Rodar local
 
 ```bash
-cp .env.example .env
+cp .env.example .env        # preencha JWT_ACCESS_SECRET (openssl rand -base64 48)
 docker compose up -d        # postgres, redis, s3 (SeaweedFS)
 pnpm install                # gera Prisma client e compila @lobby/types
 pnpm --filter @lobby/api db:deploy
-pnpm dev                    # web :3000, api :3001 (Swagger em /api/docs)
+DATABASE_URL=postgresql://lobby:lobby@localhost:5432/lobby_test pnpm --filter @lobby/api db:deploy  # banco dos testes
+pnpm dev                    # web :3000 (/register para criar a conta), api :3001 (Swagger em /api/docs)
 pnpm dev:site               # site de apresentação :3002
 ```
 

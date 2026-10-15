@@ -1,12 +1,22 @@
 import { Module } from "@nestjs/common";
+import { ClsModule } from "nestjs-cls";
 import { LoggerModule } from "nestjs-pino";
+import { CoreModule } from "./core.module.js";
 import { env } from "./env.js";
 import { HealthController } from "./health.controller.js";
-import { PrismaService } from "./prisma.service.js";
-import { RedisService } from "./redis.service.js";
+import { AccessModule } from "./modules/access/access.module.js";
+import { AuthModule } from "./modules/auth/auth.module.js";
+import { PeopleModule } from "./modules/people.module.js";
+import { OrganizationsController } from "./modules/organizations/organizations.controller.js";
 
 @Module({
   imports: [
+    CoreModule,
+    // Per-request context (see common/context.ts), filled by JwtAuthGuard.
+    ClsModule.forRoot({ global: true, middleware: { mount: true } }),
+    AuthModule,
+    PeopleModule,
+    AccessModule,
     LoggerModule.forRoot({
       pinoHttp: {
         level: env.LOG_LEVEL,
@@ -32,7 +42,6 @@ import { RedisService } from "./redis.service.js";
       },
     }),
   ],
-  controllers: [HealthController],
-  providers: [PrismaService, RedisService],
+  controllers: [HealthController, OrganizationsController],
 })
 export class AppModule {}

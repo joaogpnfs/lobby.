@@ -11,8 +11,7 @@ try {
 const apiUrl = process.env.API_URL ?? "http://localhost:3001";
 
 const nextConfig: NextConfig = {
-  cacheComponents: true,
-  partialPrefetching: true,
+  // No cacheComponents/PPR: nonce-based CSP (src/proxy.ts) needs every page rendered per request.
   output: "standalone",
   // Monorepo: trace dependencies from the repo root so the standalone build is complete.
   outputFileTracingRoot: fileURLToPath(new URL("../..", import.meta.url)),
@@ -28,7 +27,7 @@ const nextConfig: NextConfig = {
   async rewrites() {
     return [{ source: "/api/v1/:path*", destination: `${apiUrl}/api/v1/:path*` }];
   },
-  // ponytail: CSP needs per-request nonces in Next; added together with auth (Phase 2).
+  // CSP is set per request in src/proxy.ts (it carries a nonce).
   async headers() {
     return [
       {

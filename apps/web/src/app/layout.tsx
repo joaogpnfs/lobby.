@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Gabarito } from "next/font/google";
+import { connection } from "next/server";
 import { QueryProvider } from "@/lib/query-provider";
 import "./globals.css";
 
@@ -10,7 +11,9 @@ export const metadata: Metadata = {
   description: "Gestão de pessoas para empresas brasileiras.",
 };
 
-export default function RootLayout({ children }: LayoutProps<"/">) {
+export default async function RootLayout({ children }: LayoutProps<"/">) {
+  // Render per request: the CSP nonce from src/proxy.ts only reaches dynamically rendered pages.
+  await connection();
   return (
     <html lang="pt-BR" className={`${gabarito.variable} h-full antialiased`}>
       <body className="flex min-h-full flex-col">

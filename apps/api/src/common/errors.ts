@@ -2,6 +2,7 @@ import { ArgumentsHost, Catch, HttpException, HttpStatus, Logger, type Exception
 import * as Sentry from "@sentry/nestjs";
 import type { FastifyReply } from "fastify";
 import { ErrorCode, type ApiError } from "@lobby/types";
+import { Prisma } from "../generated/prisma/client.js";
 
 // The one way to fail on purpose: a stable code for clients, a status for HTTP.
 export class AppException extends HttpException {
@@ -14,6 +15,19 @@ export class AppException extends HttpException {
     super(message, status);
   }
 }
+
+export const notFound = (what: string) =>
+  new AppException(ErrorCode.NOT_FOUND, `${what} not found`, HttpStatus.NOT_FOUND);
+export const conflict = (message: string) => new AppException(ErrorCode.CONFLICT, message, HttpStatus.CONFLICT);
+export const forbidden = (message = "You do not have permission to do this") =>
+  new AppException(ErrorCode.FORBIDDEN, message, HttpStatus.FORBIDDEN);
+
+// Constraint violations the database caught for us: a duplicate, a row still in use, a row that's gone.
+const prismaErrors: Partial<Record<string, [number, ErrorCode, string]>> = {
+  P2002: [HttpStatus.CONFLICT, ErrorCode.CONFLICT, "Already exists"],
+  P2003: [HttpStatus.CONFLICT, ErrorCode.CONFLICT, "Still in use by other records"],
+  P2025: [HttpStatus.NOT_FOUND, ErrorCode.NOT_FOUND, "Not found"],
+};
 
 const codeByStatus: Partial<Record<number, ErrorCode>> = {
   400: ErrorCode.VALIDATION_ERROR,
@@ -40,6 +54,10 @@ export class AllExceptionsFilter implements ExceptionFilter {
   private toError(exception: unknown): [number, ApiError["error"]] {
     if (exception instanceof AppException) {
       return [exception.getStatus(), { code: exception.code, message: exception.message, details: exception.details }];
+    }
+    if (exception instanceof Prisma.PrismaClientKnownRequestError) {
+      const known = prismaErrors[exception.code];
+      if (known) return [known[0], { code: known[1], message: known[2] }];
     }
     if (exception instanceof HttpException) {
       const status = exception.getStatus();

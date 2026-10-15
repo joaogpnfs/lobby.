@@ -182,8 +182,21 @@ Mudanças de schema sempre por `prisma migrate dev` / `migrate deploy`; `db push
 Seguem a seção 38 da spec, cada uma com Definition of Done (seção 42). Os commits são feitos pelo usuário; o agente só altera arquivos e sugere a mensagem. 0. **Discovery**: este documento.
 
 1. **Foundation** ✅ (2026-10-11; S3 local = SeaweedFS, MinIO saiu do Docker Hub): git init, monorepo, web/api vazios rodando, Prisma + compose (postgres, redis, minio), ESLint/Prettier, config de env validada por Zod (falha no boot se faltar variável), envelope de erro, Pino com redaction, Swagger, healthcheck `/api/v1/health`, CI.
-2. **Auth**: User/Org/Membership/RefreshToken, register/login/refresh/logout/me, RBAC guards, contexto CLS, telas de login/registro, testes.
-3. **Employees**: departments, positions, branches, employees (gestor, filtros, paginação, busca), desligamento, frontend completo, teste de tenant isolation.
+2. **Auth** ✅ (2026-10-15): User/Org/Membership/RefreshToken/AuditLog (primeira migration), register/login/refresh/logout/me, `GET|PATCH /organizations/me`, RBAC guards, contexto CLS, telas de login/registro, CSP com nonce, testes. Decisões da fase:
+   - JWT com `jose` (HS256, só `JWT_ACCESS_SECRET`). O refresh token é opaco e guardado como hash, então `JWT_REFRESH_SECRET` saiu.
+   - Rate limit próprio (`RateLimitGuard`, janela fixa de 1 min em Redis, `@RateLimit(n)` por rota) em vez de `@nestjs/throttler` + storage Redis: menos dependências. Se o Redis cair, ele deixa passar (fail open) e loga.
+   - `TRUST_PROXY` (padrão `loopback`) define quem pode mandar `X-Forwarded-For`. Em produção, apontar para a faixa do ALB.
+   - CSP com nonce exige render por request, então `cacheComponents`/PPR foram desligados no web.
+   - Infra compartilhada (Prisma, Redis, Audit) em `CoreModule` global.
+   - Login também gera auditoria (`LOGIN`), assim como `ORGANIZATION_REGISTERED` e `ORGANIZATION_UPDATED`.
+3. **Employees** ✅ (2026-10-15): departments, positions, branches, employees (gestor, filtros, paginação, busca), desligamento, convites e acessos, frontend completo, teste de tenant isolation. Decisões da fase:
+   - Visibilidade por papel em `EMPLOYEE_SCOPE` (`packages/types`): HR e admin veem todos, gestor vê a si e a equipe direta, colaborador vê só a si. Telefone, nascimento e CPF completo só para HR ou para a própria pessoa; o gestor vê o CPF mascarado.
+   - E-mail de colaborador é único só entre os não excluídos (índice parcial, preview `partialIndexes` do Prisma).
+   - Departamento, cargo e filial em uso não podem ser excluídos (FK `Restrict` → 409). Erros de constraint do Prisma viram 409/404 no filtro global.
+   - Desligamento e exclusão (soft delete) desativam a membership vinculada na hora. A exclusão tira a pessoa de gestora dos liderados e dos departamentos.
+   - Convites por link (7 dias, uso único, token guardado como hash). Sem provedor de e-mail, a API devolve o link uma vez para quem convidou copiar. Só admin convida admin. Quem já tem conta confirma a própria senha.
+   - `GET /members` e `PATCH /members/:id` (papel e acesso); ninguém altera o próprio acesso.
+   - Catálogos (departamentos, cargos, filiais) com um controller genérico na API e uma tela genérica no web.
 4. **Documents**: S3/MinIO, presign → upload direto → confirm (HeadObject confere tamanho e mime) → download por URL assinada de 5 min; allowlist de mime; limite de 20 MB; job que limpa PENDING_UPLOAD com mais de 24 h.
 5. **Vacations**: request/approve/reject/cancel, constraint de sobreposição, job diário PENDING→… e APPROVED→COMPLETED, cards no dashboard, notificações (aqui nasce a infraestrutura BullMQ: fila `notifications`, `jobId` = chave de idempotência).
 6. **Benefits**: catálogo, atribuição, cancelamento.
@@ -239,7 +252,7 @@ LGPD: armazenar só o necessário, CPF mascarado na listagem e auditoria de aces
 1. ~~**Localização do projeto**~~: resolvido, movido para `C:\dev\peopleos` em 2026-10-11.
 2. **Idioma da UI**: pt-BR ou inglês? A spec usa exemplos em inglês, mas o público parece brasileiro. Padrão adotado até a resposta: UI em pt-BR e código em inglês, sem framework de i18n.
 3. **Folha de pagamento**: fora do escopo, confirmado em 2026-10-11 (inclui eSocial e FGTS Digital). É o maior módulo possível e mudaria a arquitetura.
-4. **Cobrança/planos do SaaS**: não está na spec. Fica fora.
+4. **Cobrança/planos do SaaS**: não está na spec. Fica fora do MVP, mas vai existir: ver item 17.
 5. **Provedor de e-mail** (SES, Resend…): no dev, o e-mail só é logado (ou vai para Mailpit). Definir para produção.
 6. **Regras de férias**: dias corridos (padrão adotado) ou úteis? É preciso controlar saldo/período aquisitivo CLT? Por ora não há saldo; só validação de datas e sobreposição.
 7. **Desligamento**: só status + data + motivo (padrão adotado), ou checklist de offboarding (cancelar benefícios, revogar acesso)? Por padrão, a conta vinculada é desativada.
@@ -255,3 +268,5 @@ Escopo ampliado (seção 11, depois do MVP):
 14. ~~**Clube de descontos**~~: fora por enquanto; difícil de viabilizar agora.
 15. **IA**: a spec deixa fora do MVP. Candidatos para depois: resumo de documentos, rascunho de descrição de cargos, assistente de RH com respostas sobre as políticas da empresa e análise de feedback. Definir caso de uso, provedor e política de dados (LGPD: dados de colaboradores não podem treinar modelos de terceiros).
 16. **Pesquisas de clima / NR-1**: no radar. A NR-1 passou a exigir gestão de riscos psicossociais. Tem valor comercial, mas exige metodologia (questionário validado, anonimato, relatório para o PGR). Rever depois da Fase 18.
+17. **Plano para pessoas e equipes pequenas** (pedido em 2026-10-15): é um **plano comercial** (confirmado), para quem está começando a se organizar com uma equipe pequena. Depende da cobrança (item 4): preço, limites (ex.: número de pessoas) e o que entra. O modelo atual já comporta uma organização pequena.
+18. **Banco gerenciado**: o usuário vai criar um projeto Supabase (2026-10-15). Padrão adotado: usar só como Postgres gerenciado (Prisma com a connection string; pooler para a app, conexão direta para migrations). Auth e Storage do Supabase não entram: auth já é própria e arquivos vão para S3.

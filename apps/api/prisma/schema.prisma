@@ -5,8 +5,239 @@ generator client {
   output              = "../src/generated/prisma"
   moduleFormat        = "esm"
   importFileExtension = "js"
+  // Unique employee email only among non-deleted rows (soft delete).
+  previewFeatures     = ["partialIndexes"]
 }
 
 datasource db {
   provider = "postgresql"
+}
+
+enum UserStatus {
+  ACTIVE
+  INVITED
+  DISABLED
+}
+
+enum Role {
+  ORG_ADMIN
+  HR_MANAGER
+  MANAGER
+  EMPLOYEE
+}
+
+enum MembershipStatus {
+  ACTIVE
+  DISABLED
+}
+
+model User {
+  id           String     @id @default(uuid()) @db.Uuid
+  email        String     @unique
+  passwordHash String?
+  name         String
+  status       UserStatus @default(ACTIVE)
+  // Platform role, not tied to an organization (no console in the MVP).
+  isSuperAdmin Boolean    @default(false)
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+
+  memberships   OrganizationMembership[]
+  refreshTokens RefreshToken[]
+  employees     Employee[]
+}
+
+model Organization {
+  id        String   @id @default(uuid()) @db.Uuid
+  name      String
+  legalName String?
+  document  String?
+  email     String?
+  phone     String?
+  logo      String?
+  timezone  String   @default("America/Sao_Paulo")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  memberships OrganizationMembership[]
+  auditLogs   AuditLog[]
+  departments Department[]
+  positions   Position[]
+  branches    Branch[]
+  employees   Employee[]
+  invitations Invitation[]
+}
+
+model OrganizationMembership {
+  id             String           @id @default(uuid()) @db.Uuid
+  userId         String           @db.Uuid
+  organizationId String           @db.Uuid
+  role           Role
+  status         MembershipStatus @default(ACTIVE)
+  createdAt      DateTime         @default(now())
+  updatedAt      DateTime         @updatedAt
+
+  user          User           @relation(fields: [userId], references: [id])
+  organization  Organization   @relation(fields: [organizationId], references: [id])
+  refreshTokens RefreshToken[]
+
+  @@unique([userId, organizationId])
+  @@index([organizationId])
+}
+
+// Opaque refresh tokens, stored as SHA-256. One family per login; reuse of a rotated token revokes the family.
+model RefreshToken {
+  id           String    @id @default(uuid()) @db.Uuid
+  userId       String    @db.Uuid
+  membershipId String    @db.Uuid
+  tokenHash    String    @unique
+  familyId     String    @db.Uuid
+  expiresAt    DateTime
+  revokedAt    DateTime?
+  replacedById String?   @db.Uuid
+  createdAt    DateTime  @default(now())
+
+  user       User                   @relation(fields: [userId], references: [id])
+  membership OrganizationMembership @relation(fields: [membershipId], references: [id])
+
+  @@index([familyId])
+}
+
+// Append-only. Never put passwords, tokens or personal documents in metadata.
+model AuditLog {
+  id             String   @id @default(uuid()) @db.Uuid
+  organizationId String   @db.Uuid
+  actorId        String?  @db.Uuid
+  action         String
+  entity         String
+  entityId       String?
+  metadata       Json?
+  ipAddress      String?
+  userAgent      String?
+  createdAt      DateTime @default(now())
+
+  organization Organization @relation(fields: [organizationId], references: [id])
+
+  @@index([organizationId, createdAt])
+}
+
+enum EmployeeStatus {
+  PENDING
+  ACTIVE
+  ON_LEAVE
+  TERMINATED
+}
+
+model Department {
+  id             String   @id @default(uuid()) @db.Uuid
+  organizationId String   @db.Uuid
+  name           String
+  description    String?
+  managerId      String?  @db.Uuid
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  organization Organization @relation(fields: [organizationId], references: [id])
+  manager      Employee?    @relation("DepartmentManager", fields: [managerId], references: [id], onDelete: SetNull)
+  employees    Employee[]
+
+  @@unique([organizationId, name])
+}
+
+model Position {
+  id             String   @id @default(uuid()) @db.Uuid
+  organizationId String   @db.Uuid
+  name           String
+  description    String?
+  level          String?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  organization Organization @relation(fields: [organizationId], references: [id])
+  employees    Employee[]
+
+  @@unique([organizationId, name])
+}
+
+model Branch {
+  id             String   @id @default(uuid()) @db.Uuid
+  organizationId String   @db.Uuid
+  name           String
+  address        String?
+  city           String?
+  state          String?
+  country        String   @default("BR")
+  timezone       String   @default("America/Sao_Paulo")
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  organization Organization @relation(fields: [organizationId], references: [id])
+  employees    Employee[]
+
+  @@unique([organizationId, name])
+}
+
+model Employee {
+  id                String         @id @default(uuid()) @db.Uuid
+  organizationId    String         @db.Uuid
+  // Login account, once the person accepts an invitation.
+  userId            String?        @db.Uuid
+  firstName         String
+  lastName          String
+  preferredName     String?
+  email             String
+  phone             String?
+  birthDate         DateTime?      @db.Date
+  // CPF. Masked everywhere except the detail view for HR.
+  document          String?
+  hireDate          DateTime       @db.Date
+  terminationDate   DateTime?      @db.Date
+  terminationReason String?
+  status            EmployeeStatus @default(ACTIVE)
+  departmentId      String?        @db.Uuid
+  positionId        String?        @db.Uuid
+  branchId          String?        @db.Uuid
+  managerId         String?        @db.Uuid
+  avatar            String?
+  deletedAt         DateTime?
+  createdAt         DateTime       @default(now())
+  updatedAt         DateTime       @updatedAt
+
+  organization       Organization @relation(fields: [organizationId], references: [id])
+  user               User?        @relation(fields: [userId], references: [id])
+  department         Department?  @relation(fields: [departmentId], references: [id], onDelete: Restrict)
+  position           Position?    @relation(fields: [positionId], references: [id], onDelete: Restrict)
+  branch             Branch?      @relation(fields: [branchId], references: [id], onDelete: Restrict)
+  manager            Employee?    @relation("Reports", fields: [managerId], references: [id])
+  reports            Employee[]   @relation("Reports")
+  managedDepartments Department[] @relation("DepartmentManager")
+  invitations        Invitation[]
+
+  @@unique([organizationId, userId])
+  @@unique([organizationId, email], where: raw("\"deletedAt\" IS NULL"))
+  @@index([organizationId, status])
+  @@index([organizationId, departmentId])
+  @@index([organizationId, createdAt])
+  @@index([managerId])
+}
+
+// Access to the organization, sent by link. Accepting creates (or reuses) the User and the membership.
+model Invitation {
+  id             String    @id @default(uuid()) @db.Uuid
+  organizationId String    @db.Uuid
+  email          String
+  role           Role
+  // Links the new account to an existing employee record.
+  employeeId     String?   @db.Uuid
+  tokenHash      String    @unique
+  invitedById    String    @db.Uuid
+  expiresAt      DateTime
+  acceptedAt     DateTime?
+  revokedAt      DateTime?
+  createdAt      DateTime  @default(now())
+
+  organization Organization @relation(fields: [organizationId], references: [id])
+  employee     Employee?    @relation(fields: [employeeId], references: [id])
+
+  @@index([organizationId, createdAt])
 }

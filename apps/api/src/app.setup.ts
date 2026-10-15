@@ -1,4 +1,5 @@
 import { randomUUID } from "node:crypto";
+import cookie from "@fastify/cookie";
 import helmet from "@fastify/helmet";
 import { HttpStatus, StandardSchemaValidationPipe } from "@nestjs/common";
 import { FastifyAdapter, type NestFastifyApplication } from "@nestjs/platform-fastify";
@@ -10,7 +11,11 @@ import { env } from "./env.js";
 
 // Reuses the caller's x-request-id (proxy, web app) or creates one, and echoes it back.
 export function createAdapter() {
-  const adapter = new FastifyAdapter({ requestIdHeader: "x-request-id", genReqId: () => randomUUID() });
+  const adapter = new FastifyAdapter({
+    requestIdHeader: "x-request-id",
+    genReqId: () => randomUUID(),
+    trustProxy: env.TRUST_PROXY,
+  });
   adapter.getInstance().addHook("onSend", async (req, reply) => {
     reply.header("x-request-id", req.id);
   });
@@ -25,6 +30,7 @@ export async function configureApp(app: NestFastifyApplication) {
 
   // JSON-only API: CSP belongs to the web app; here it would only break the Swagger UI.
   await app.register(helmet, { contentSecurityPolicy: false });
+  await app.register(cookie);
   app.enableCors({ origin: env.CORS_ORIGINS, credentials: true });
 
   app.useGlobalPipes(
