@@ -12,7 +12,6 @@ export const metadata: Metadata = {
 };
 
 export default async function RootLayout({ children }: LayoutProps<"/">) {
-  // Render per request: the CSP nonce from src/proxy.ts only reaches dynamically rendered pages.
   await connection();
   return (
     <html lang="pt-BR" className={`${gabarito.variable} h-full antialiased`}>

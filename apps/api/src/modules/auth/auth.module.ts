@@ -6,7 +6,6 @@ import { AuthService } from "./auth.service.js";
 import { PermissionsGuard } from "./permissions.guard.js";
 import { RateLimitGuard } from "./rate-limit.guard.js";
 
-// Global guards run in this order: authenticate, authorize, then count against the rate limit.
 @Module({
   controllers: [AuthController],
   providers: [

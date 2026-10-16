@@ -10,8 +10,6 @@ export const useCatalog = <T>(resource: CatalogResource, query: string) =>
     placeholderData: keepPreviousData,
   });
 
-// For selects in forms.
-// ponytail: first 100 by name; a searchable combobox when an organization outgrows that.
 export const useOptions = (resource: CatalogResource | "employees") =>
   useQuery({
     queryKey: [resource, "options"],

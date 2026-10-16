@@ -14,7 +14,6 @@ import { cn } from "@/lib/utils";
 
 type NavItem = { href: string; label: string; icon: LucideIcon; permission?: Permission };
 
-// Only what exists today; each phase adds its own entry.
 const NAV: NavItem[] = [
   { href: "/dashboard", label: "Início", icon: House },
   { href: "/employees", label: "Colaboradores", icon: Users, permission: "employees:read" },
@@ -24,8 +23,6 @@ const NAV: NavItem[] = [
   { href: "/settings", label: "Configurações", icon: Settings },
 ];
 
-// Every page in (app) needs a session. On load there is no access token in memory yet:
-// /auth/me answers 401, the api-client refreshes from the cookie and retries. No cookie means /login.
 export default function AppLayout({ children }: LayoutProps<"/">) {
   const router = useRouter();
   const pathname = usePathname();

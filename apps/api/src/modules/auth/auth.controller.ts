@@ -19,7 +19,6 @@ import { REFRESH_COOKIE, REFRESH_TOKEN_TTL_MS } from "./tokens.js";
 
 const COOKIE_PATH = "/api/v1/auth";
 
-// CSRF: refresh and logout act on the cookie alone, so they also require an allowed Origin.
 function assertTrustedOrigin(req: FastifyRequest) {
   const origin = req.headers.origin;
   if (!origin || !env.CORS_ORIGINS.includes(origin)) {
@@ -94,7 +93,6 @@ export class AuthController {
   }
 }
 
-// Refresh token into the httpOnly cookie, access token into the body. Also used by invitation acceptance.
 export function sendSession(reply: FastifyReply, session: Session): AuthTokens {
   reply.setCookie(REFRESH_COOKIE, session.refreshToken, {
     httpOnly: true,

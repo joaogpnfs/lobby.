@@ -18,15 +18,10 @@ import { PrismaService } from "../../prisma.service.js";
 import { AuditService } from "../audit/audit.service.js";
 import { personName, personRef } from "../employees/employee.mapper.js";
 
-// Departments, positions and branches: small per-organization catalogs that employees point to.
-// Reading is open to every member (they show up on employee profiles); writing needs org-structure:manage.
-// Deleting one that employees still use fails with 409 (foreign key), so nothing is orphaned silently.
-
 const idParam = z.uuid();
 const employeeCount = { _count: { select: { employees: { where: { deletedAt: null } } } } } as const;
 type Counted = { _count: { employees: number } };
 
-// The Prisma calls the catalogs share. Each model's delegate fits it; the cast only drops Prisma's generics.
 type Delegate<R> = {
   findMany(args: object): Promise<R[]>;
   count(args: object): Promise<number>;
@@ -43,7 +38,6 @@ type CatalogOptions<S extends z.ZodObject, R> = {
   delegate: (db: Prisma.TransactionClient) => unknown;
   select: object;
   toDto: (row: R) => unknown;
-  // Extra checks on ids in the body (they must belong to the caller's organization).
   validate?: (body: Partial<z.infer<S>>, prisma: PrismaService, organizationId: string) => Promise<void>;
 };
 
@@ -123,7 +117,6 @@ function catalogController<S extends z.ZodObject, R>(o: CatalogOptions<S, R>) {
       return null;
     }
   }
-  // Distinct names keep Swagger operation ids unique (DepartmentsController_list, ...).
   Object.defineProperty(CatalogController, "name", {
     value: `${o.path[0]!.toUpperCase()}${o.path.slice(1)}Controller`,
   });
@@ -144,7 +137,6 @@ export const DepartmentsController = catalogController({
     manager: manager && personRef(manager),
     employeeCount: _count.employees,
   }),
-  // The manager must be a current employee of the same organization.
   validate: async ({ managerId }, prisma, organizationId) => {
     if (managerId && !(await prisma.employee.count({ where: { id: managerId, organizationId, deletedAt: null } }))) {
       throw notFound("Manager");

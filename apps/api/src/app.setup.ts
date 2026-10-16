@@ -9,7 +9,6 @@ import { AllExceptionsFilter, AppException } from "./common/errors.js";
 import { EnvelopeInterceptor } from "./common/envelope.interceptor.js";
 import { env } from "./env.js";
 
-// Reuses the caller's x-request-id (proxy, web app) or creates one, and echoes it back.
 export function createAdapter() {
   const adapter = new FastifyAdapter({
     requestIdHeader: "x-request-id",
@@ -22,13 +21,10 @@ export function createAdapter() {
   return adapter;
 }
 
-// Everything that shapes the HTTP surface. Shared by main.ts and the e2e tests,
-// so tests exercise the same prefix, filters and validation as production.
 export async function configureApp(app: NestFastifyApplication) {
   app.setGlobalPrefix("api/v1");
   app.enableShutdownHooks();
 
-  // JSON-only API: CSP belongs to the web app; here it would only break the Swagger UI.
   await app.register(helmet, { contentSecurityPolicy: false });
   await app.register(cookie);
   app.enableCors({ origin: env.CORS_ORIGINS, credentials: true });

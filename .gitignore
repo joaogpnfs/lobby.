@@ -11,3 +11,5 @@ coverage
 generated
 *.tsbuildinfo
 next-env.d.ts
+.prompt.txt
+.private/

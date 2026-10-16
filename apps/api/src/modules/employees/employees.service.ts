@@ -83,13 +83,11 @@ export class EmployeesService {
     await this.assertReferences(input, id);
     await this.prisma.$transaction(async (tx) => {
       await tx.employee.update({ where: { id }, data: { ...input, ...this.dates(input) } });
-      // Field names only: values may be personal data.
       await this.audit.record("EMPLOYEE_UPDATED", "Employee", id, { fields: Object.keys(input) }, tx);
     });
     return this.get(id);
   }
 
-  // Desligamento: keeps the record and history, and cuts the person's access to the system.
   async terminate(id: string, input: TerminateEmployeeInput): Promise<EmployeeDto> {
     const current = await this.findOwn(id);
     if (current.status === "TERMINATED") throw invalid("Employee is already terminated");
@@ -107,7 +105,6 @@ export class EmployeesService {
     return this.get(id);
   }
 
-  // Soft delete (history stays for the audit log). Direct reports and departments lose this manager.
   async remove(id: string) {
     const current = await this.findOwn(id);
     await this.prisma.$transaction(async (tx) => {
@@ -120,7 +117,6 @@ export class EmployeesService {
     return null;
   }
 
-  // Tenant + role scope for reads: everyone (HR), self and direct reports (manager), or self.
   private async visibleWhere(): Promise<Prisma.EmployeeWhereInput> {
     const { organizationId, role } = this.ctx.auth;
     const base = { organizationId, deletedAt: null };
@@ -144,7 +140,6 @@ export class EmployeesService {
     return me?.id ?? null;
   }
 
-  // Writes are HR-only (checked by permission), so the tenant filter is the only scope here.
   private async findOwn(id: string) {
     const row = await this.prisma.employee.findFirst({
       where: { id, organizationId: this.ctx.auth.organizationId, deletedAt: null },
@@ -154,7 +149,6 @@ export class EmployeesService {
     return row;
   }
 
-  // Every id from the body must belong to this organization; a foreign one is reported as not found.
   private async assertReferences(input: UpdateEmployeeInput, selfId?: string) {
     const organizationId = this.ctx.auth.organizationId;
     const { departmentId, positionId, branchId, managerId } = input;
@@ -171,7 +165,6 @@ export class EmployeesService {
     if (managerId && selfId) await this.assertNoManagerCycle(selfId, managerId);
   }
 
-  // Walks up from the new manager; reaching the employee means they would manage themselves.
   private async assertNoManagerCycle(employeeId: string, managerId: string) {
     let cursor: string | null = managerId;
     for (let depth = 0; cursor && depth < 100; depth++) {
@@ -193,7 +186,6 @@ export class EmployeesService {
     });
   }
 
-  // ISO date strings from the API become Date values for @db.Date columns; undefined leaves them unchanged.
   private dates({ birthDate, hireDate }: UpdateEmployeeInput) {
     return {
       birthDate: birthDate === undefined ? undefined : birthDate ? toDate(birthDate) : null,

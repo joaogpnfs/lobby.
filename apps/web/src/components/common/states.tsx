@@ -3,8 +3,6 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ApiError } from "@/lib/api-client";
 
-// Every screen shows one of these instead of a blank area: loading, nothing yet, or something failed.
-
 export function LoadingState({ rows = 5 }: { rows?: number }) {
   return (
     <div className="grid gap-2" aria-busy="true" aria-label="Carregando">
@@ -39,7 +37,6 @@ export function ErrorState({ error, onRetry }: { error: unknown; onRetry?: () =>
   );
 }
 
-// The API speaks English codes; people read Portuguese.
 export function errorMessage(error: unknown) {
   if (!(error instanceof ApiError)) return "Verifique sua conexão e tente de novo.";
   switch (error.code) {

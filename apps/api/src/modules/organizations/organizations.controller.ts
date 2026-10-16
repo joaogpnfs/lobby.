@@ -8,7 +8,6 @@ import { AuditService } from "../audit/audit.service.js";
 
 const select = { id: true, name: true, legalName: true, document: true, email: true, phone: true, timezone: true };
 
-// The caller's own organization. There is no route that takes an organization id.
 @ApiTags("organizations")
 @ApiBearerAuth()
 @Controller("organizations/me")

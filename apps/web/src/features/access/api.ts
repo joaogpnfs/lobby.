@@ -44,7 +44,6 @@ export function useUpdateMember() {
   });
 }
 
-// The token goes in a POST body, not the API URL, so it stays out of request logs.
 export const useInvitationPreview = (token: string) =>
   useQuery({
     queryKey: ["invitation-preview", token],

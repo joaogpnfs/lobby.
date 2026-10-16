@@ -14,5 +14,4 @@ export const STATUS_LABEL: Record<EmployeeStatus, string> = {
   TERMINATED: "Desligado",
 };
 
-// "2024-01-15" → "15/01/2024", without going through Date (no timezone shifts).
 export const formatDate = (iso: string | null) => (iso ? iso.split("-").reverse().join("/") : "—");

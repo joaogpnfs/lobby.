@@ -1,8 +1,6 @@
 import { z } from "zod";
 import { ROLES, type Role } from "./permissions.js";
 
-// ---------- Lists ----------
-
 export const listQuerySchema = z.object({
   page: z.coerce.number().int().min(1).default(1),
   pageSize: z.coerce.number().int().min(1).max(100).default(20),
@@ -14,8 +12,6 @@ const optionalText = (max: number) => z.string().trim().max(max).nullish();
 const optionalId = z.uuid().nullish();
 const isoDate = z.iso.date();
 const roleEnum = z.enum(ROLES);
-
-// ---------- Departments, positions, branches ----------
 
 export const departmentInputSchema = z
   .object({ name: z.string().trim().min(2).max(80), description: optionalText(300), managerId: optionalId })
@@ -63,12 +59,9 @@ export type BranchDto = {
   employeeCount: number;
 };
 
-// ---------- Employees ----------
-
 export const EMPLOYEE_STATUSES = ["PENDING", "ACTIVE", "ON_LEAVE", "TERMINATED"] as const;
 export type EmployeeStatus = (typeof EMPLOYEE_STATUSES)[number];
 
-// CPF check digits, so typos are caught at the form instead of stored.
 export function isValidCpf(value: string) {
   const d = value.replace(/\D/g, "");
   if (d.length !== 11 || /^(\d)\1+$/.test(d)) return false;
@@ -94,7 +87,6 @@ const employeeFields = {
   birthDate: isoDate.nullish(),
   document: cpf.nullish(),
   hireDate: isoDate,
-  // TERMINATED only through the termination endpoint, which also records date and reason.
   status: z.enum(["PENDING", "ACTIVE", "ON_LEAVE"]).optional(),
   departmentId: optionalId,
   positionId: optionalId,
@@ -122,7 +114,6 @@ export const employeeListQuerySchema = listQuerySchema.extend({
 });
 export type EmployeeListQuery = z.infer<typeof employeeListQuerySchema>;
 
-// An employee or catalog entry, by id and display name.
 export type Ref = { id: string; name: string };
 
 export type EmployeeListItem = {
@@ -141,18 +132,14 @@ export type EmployeeDto = EmployeeListItem & {
   firstName: string;
   lastName: string;
   preferredName: string | null;
-  // Sensitive fields: null unless the viewer is HR or the person themself.
   phone: string | null;
   birthDate: string | null;
-  // Masked (***.456.789-**) unless the viewer may see it in full.
   document: string | null;
   terminationDate: string | null;
   terminationReason: string | null;
   hasAccess: boolean;
   reports: Ref[];
 };
-
-// ---------- Invitations ----------
 
 export const createInvitationSchema = z
   .object({
@@ -166,7 +153,6 @@ export type CreateInvitationInput = z.infer<typeof createInvitationSchema>;
 export const acceptInvitationSchema = z
   .object({
     token: z.string().min(20).max(200),
-    // Only for a new account; someone who already has one just confirms their password.
     name: z.string().trim().min(2).max(120).optional(),
     password: z.string().min(8, "A senha precisa ter pelo menos 8 caracteres").max(128),
   })
@@ -182,10 +168,8 @@ export type InvitationDto = {
   createdAt: string;
 };
 
-// Returned once, right after creating: until an email provider is chosen, the inviter shares the link.
 export type CreatedInvitation = InvitationDto & { url: string };
 
-// What the invitee sees before accepting.
 export type InvitationPreview = { organizationName: string; email: string; role: Role; hasAccount: boolean };
 
 export const updateMemberSchema = z

@@ -5,7 +5,6 @@ import { configureApp, createAdapter } from "../src/app.setup.js";
 import { PrismaService } from "../src/prisma.service.js";
 import { RedisService } from "../src/redis.service.js";
 
-// The real app (same prefix, guards, filters and validation as production) against the test database.
 export async function createTestApp() {
   const moduleRef = await Test.createTestingModule({ imports: [AppModule] }).compile();
   const app = moduleRef.createNestApplication<NestFastifyApplication>(createAdapter());
@@ -15,7 +14,6 @@ export async function createTestApp() {
   return app;
 }
 
-// Empties every table and the rate-limit counters, so each test starts clean.
 export async function resetState(app: NestFastifyApplication) {
   const prisma = app.get(PrismaService);
   const tables = await prisma.$queryRaw<{ tablename: string }[]>`

@@ -12,7 +12,6 @@ import { OrganizationsController } from "./modules/organizations/organizations.c
 @Module({
   imports: [
     CoreModule,
-    // Per-request context (see common/context.ts), filled by JwtAuthGuard.
     ClsModule.forRoot({ global: true, middleware: { mount: true } }),
     AuthModule,
     PeopleModule,
@@ -20,9 +19,7 @@ import { OrganizationsController } from "./modules/organizations/organizations.c
     LoggerModule.forRoot({
       pinoHttp: {
         level: env.LOG_LEVEL,
-        // Fastify assigns the request id (see createAdapter); reuse it so every log line carries it.
         genReqId: (req) => req.id,
-        // Never log credentials or personal documents.
         redact: {
           paths: [
             "req.headers.authorization",

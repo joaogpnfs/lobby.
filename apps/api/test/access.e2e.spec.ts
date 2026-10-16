@@ -43,7 +43,6 @@ describe("invitations", () => {
     });
     expect((await admin.get(`/employees/${person.id}`)).body.data.hasAccess).toBe(true);
 
-    // A link works once.
     await client(app).post("/invitations/accept", { token, name: "Rita", password: "rita-pass-123" }).expect(404);
   });
 

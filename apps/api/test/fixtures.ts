@@ -3,8 +3,6 @@ import type { Role } from "@lobby/types";
 import request from "supertest";
 import { expect } from "vitest";
 
-// Small factories over the real HTTP API, so tests read like what a client does.
-
 export type Api = ReturnType<typeof client>;
 
 export function client(app: NestFastifyApplication, token?: string) {
@@ -20,7 +18,6 @@ export function client(app: NestFastifyApplication, token?: string) {
   };
 }
 
-// A new organization with its ORG_ADMIN, logged in.
 export async function signUp(app: NestFastifyApplication, org: string) {
   const slug = org.toLowerCase().replace(/\W/g, "");
   const res = await client(app)
@@ -49,7 +46,6 @@ export async function createEmployee(api: Api, overrides: Record<string, unknown
   return res.body.data as { id: string; email: string };
 }
 
-// Invites an existing employee with the given role and accepts it: returns a client logged in as that person.
 export async function giveAccess(
   app: NestFastifyApplication,
   admin: Api,

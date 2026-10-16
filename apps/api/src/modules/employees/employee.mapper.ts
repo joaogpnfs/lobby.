@@ -1,8 +1,6 @@
 import type { EmployeeDto, EmployeeListItem, Ref } from "@lobby/types";
 import type { Prisma } from "../../generated/prisma/client.js";
 
-// Selects and mappers shared by every place that returns employees: only the columns the DTO needs.
-
 export const personName = { id: true, firstName: true, lastName: true, preferredName: true } as const;
 type NameRow = Prisma.EmployeeGetPayload<{ select: typeof personName }>;
 
@@ -33,11 +31,9 @@ export const detailSelect = {
 } satisfies Prisma.EmployeeSelect;
 type DetailRow = Prisma.EmployeeGetPayload<{ select: typeof detailSelect }>;
 
-// @db.Date columns come back as UTC midnight.
 export const isoDate = (d: Date) => d.toISOString().slice(0, 10);
 export const toDate = (s: string) => new Date(`${s}T00:00:00.000Z`);
 
-// LGPD: CPF shown as ***.456.789-** unless the viewer may see it in full.
 export const maskCpf = (cpf: string) => `***.${cpf.slice(3, 6)}.${cpf.slice(6, 9)}-**`;
 
 export function toListItem(e: ListRow): EmployeeListItem {
@@ -54,7 +50,6 @@ export function toListItem(e: ListRow): EmployeeListItem {
   };
 }
 
-// `full`: HR, or the person themself. A manager looking at a report gets the work profile only.
 export function toDetail(e: DetailRow, full: boolean): EmployeeDto {
   return {
     ...toListItem(e),

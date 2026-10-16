@@ -1,4 +1,3 @@
-// Loaded first in main.ts. Sentry stays off unless SENTRY_DSN is set.
 import * as Sentry from "@sentry/nestjs";
 import { env } from "./env.js";
 

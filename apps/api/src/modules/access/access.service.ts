@@ -60,7 +60,6 @@ const toMember = ({
 const invalidInvitation = () =>
   new AppException(ErrorCode.NOT_FOUND, "Invitation not found or expired", HttpStatus.NOT_FOUND);
 
-// Who gets into an organization: invitations (by link) and the memberships they create.
 @Injectable()
 export class AccessService {
   private readonly logger = new Logger(AccessService.name);
@@ -74,7 +73,6 @@ export class AccessService {
 
   async invite(input: CreateInvitationInput): Promise<CreatedInvitation> {
     const { organizationId, userId, role } = this.ctx.auth;
-    // No privilege escalation: only an admin can hand out admin.
     if (input.role === "ORG_ADMIN" && role !== "ORG_ADMIN") throw forbidden("Only an admin can invite another admin");
 
     if (input.employeeId) {
@@ -93,7 +91,6 @@ export class AccessService {
 
     const token = newRefreshToken();
     const invitation = await this.prisma.$transaction(async (tx) => {
-      // One live invitation per email: a new one replaces the old link.
       await tx.invitation.updateMany({
         where: { organizationId, email: input.email, acceptedAt: null, revokedAt: null },
         data: { revokedAt: new Date() },
@@ -113,7 +110,6 @@ export class AccessService {
     });
 
     const url = `${env.APP_URL}/invite/${token}`;
-    // ponytail: no email provider yet (PROJECT_PLAN §15.5); the inviter copies the link. Send it by email once chosen.
     if (env.NODE_ENV === "development") this.logger.log(`Invitation link for ${input.email}: ${url}`);
     return { ...toInvitation(invitation), url };
   }
@@ -142,7 +138,6 @@ export class AccessService {
     return null;
   }
 
-  // Public: what the invitee sees on the acceptance page.
   async preview(token: string): Promise<InvitationPreview> {
     const invitation = await this.findLive(token);
     const account = await this.prisma.user.count({ where: { email: invitation.email } });
@@ -154,7 +149,6 @@ export class AccessService {
     };
   }
 
-  // Public: creates the account (or confirms the existing one), the membership, links the employee, and logs in.
   async accept(input: AcceptInvitationInput): Promise<Session> {
     const invitation = await this.findLive(input.token);
     const { organizationId, email, role, employeeId } = invitation;
@@ -176,7 +170,6 @@ export class AccessService {
     const passwordHash = existing ? null : await hash(input.password);
 
     const membership = await this.prisma.$transaction(async (tx) => {
-      // Conditional update: the same link can't be used twice, even concurrently.
       const { count } = await tx.invitation.updateMany({
         where: { id: invitation.id, acceptedAt: null, revokedAt: null },
         data: { acceptedAt: new Date() },
@@ -243,7 +236,6 @@ export class AccessService {
 
   async updateMember(id: string, input: UpdateMemberInput): Promise<MemberDto> {
     const { organizationId, membershipId } = this.ctx.auth;
-    // Changing your own role or access could lock the organization out of its last admin.
     if (id === membershipId) throw forbidden("You can't change your own access");
     const found = await this.prisma.organizationMembership.count({ where: { id, organizationId } });
     if (!found) throw notFound("Member");

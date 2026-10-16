@@ -4,7 +4,6 @@ import type { FastifyReply } from "fastify";
 import { ErrorCode, type ApiError } from "@lobby/types";
 import { Prisma } from "../generated/prisma/client.js";
 
-// The one way to fail on purpose: a stable code for clients, a status for HTTP.
 export class AppException extends HttpException {
   constructor(
     readonly code: ErrorCode,
@@ -22,7 +21,6 @@ export const conflict = (message: string) => new AppException(ErrorCode.CONFLICT
 export const forbidden = (message = "You do not have permission to do this") =>
   new AppException(ErrorCode.FORBIDDEN, message, HttpStatus.FORBIDDEN);
 
-// Constraint violations the database caught for us: a duplicate, a row still in use, a row that's gone.
 const prismaErrors: Partial<Record<string, [number, ErrorCode, string]>> = {
   P2002: [HttpStatus.CONFLICT, ErrorCode.CONFLICT, "Already exists"],
   P2003: [HttpStatus.CONFLICT, ErrorCode.CONFLICT, "Still in use by other records"],
@@ -38,8 +36,6 @@ const codeByStatus: Partial<Record<number, ErrorCode>> = {
   429: ErrorCode.RATE_LIMITED,
 };
 
-// Every error leaves the API as { success: false, error: { code, message, details? } }.
-// Unexpected errors are logged (with the request id from nestjs-pino) and never expose a stack.
 @Catch()
 export class AllExceptionsFilter implements ExceptionFilter {
   private readonly logger = new Logger("Exceptions");

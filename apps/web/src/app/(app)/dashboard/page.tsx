@@ -3,7 +3,6 @@ import Link from "next/link";
 
 export const metadata: Metadata = { title: "Início · lobby." };
 
-// ponytail: placeholder until the dashboard cards arrive with vacations (Phase 5) and reports (Phase 9).
 export default function DashboardPage() {
   return (
     <div className="grid max-w-xl gap-4">

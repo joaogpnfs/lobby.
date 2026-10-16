@@ -3,12 +3,10 @@ import { z } from "zod";
 import type { AuthTokens, LoginInput, Me, Permission, RegisterInput } from "@lobby/types";
 import { ApiError, apiFetch, setAccessToken } from "@/lib/api-client";
 
-// Form validation messages in Portuguese; the schemas themselves come from @lobby/types.
 z.config(z.locales.ptBR());
 
 export const meKey = ["auth", "me"] as const;
 
-// With no token in memory (fresh tab, reload) the 401 triggers a refresh from the cookie, then retries.
 export const useMe = () => useQuery({ queryKey: meKey, queryFn: () => apiFetch<Me>("/auth/me"), retry: false });
 
 function useStartSession(path: "/auth/login" | "/auth/register") {
@@ -51,11 +49,9 @@ export function authErrorMessage(error: unknown) {
   }
 }
 
-// Only same-site paths, so ?next= can't send someone to another site after login.
 export const safeNext = (next: unknown) =>
   typeof next === "string" && /^\/(?![/\\])/.test(next) ? next : "/dashboard";
 
-// Hides actions the role can't take. The API still checks every request.
 export function useCan() {
   const { data } = useMe();
   return (permission: Permission) => data?.permissions.includes(permission) ?? false;

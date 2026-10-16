@@ -17,7 +17,6 @@ export type RegisterInput = z.infer<typeof registerSchema>;
 export const loginSchema = z.object({ email, password: z.string().min(1).max(128) }).strict();
 export type LoginInput = z.infer<typeof loginSchema>;
 
-// Returned by register, login and refresh. The refresh token travels only as an httpOnly cookie.
 export type AuthTokens = { accessToken: string };
 
 export type Me = {

@@ -6,7 +6,6 @@ import { cn } from "@/lib/utils";
 
 type Common = { id: string; label: string; error?: string; hint?: string };
 
-// Label, control and message wired for screen readers (aria-invalid + aria-describedby).
 function Shell({ id, label, error, hint, children }: Common & { children: (a11y: object) => ReactNode }) {
   const describedBy = error ? `${id}-error` : hint ? `${id}-hint` : undefined;
   return (
@@ -42,7 +41,6 @@ export function TextareaField({ id, label, error, hint, ...input }: Common & Com
   );
 }
 
-// Native select: keyboard, mobile pickers and screen readers work out of the box.
 export function SelectField({
   id,
   label,

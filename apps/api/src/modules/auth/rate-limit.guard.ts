@@ -10,8 +10,6 @@ import { RedisService } from "../../redis.service.js";
 
 const DEFAULT_PER_MINUTE = 100;
 
-// Global, runs after the auth guards. Fixed one-minute windows in Redis, shared by every API instance.
-// ponytail: a fixed window lets up to 2x the limit through across a window edge; sliding window if that matters.
 @Injectable()
 export class RateLimitGuard implements CanActivate {
   private readonly logger = new Logger(RateLimitGuard.name);
@@ -28,8 +26,6 @@ export class RateLimitGuard implements CanActivate {
     const route = ctx.getHandler().name;
     const email = (req.body as { email?: unknown } | undefined)?.email;
 
-    // Strict routes count per IP and per email: one IP can't spray many accounts,
-    // and many IPs can't hammer one account freely.
     const keys = strict
       ? [`ip:${route}:${req.ip}`, ...(typeof email === "string" ? [`email:${route}:${email.toLowerCase()}`] : [])]
       : [`user:${this.cls.get("auth")?.userId ?? req.ip}`];
@@ -47,7 +43,6 @@ export class RateLimitGuard implements CanActivate {
       }
     } catch (err) {
       if (err instanceof AppException) throw err;
-      // Redis down: fail open so an outage there doesn't lock everyone out. /health reports it.
       this.logger.warn(`Rate limit skipped: ${String(err)}`);
     }
     return true;

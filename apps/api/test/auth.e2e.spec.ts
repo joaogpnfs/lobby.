@@ -12,7 +12,6 @@ const owner = { name: "Ana Souza", email: "ana@acme.test", password: "correct-ho
 let app: NestFastifyApplication;
 const http = () => request(app.getHttpServer());
 
-// The refresh token as the browser would send it back: only the cookie's name=value.
 const refreshCookie = (res: request.Response) => {
   const raw = ([] as string[]).concat(res.headers["set-cookie"] ?? []).find((c) => c.startsWith("lobby_rt="));
   return raw?.split(";")[0];
@@ -147,7 +146,6 @@ describe("refresh", () => {
     const legit = refreshCookie(await refresh(stolen).expect(200));
 
     await refresh(stolen).expect(401);
-    // The legitimate holder is logged out too: the family is burned.
     await refresh(legit).expect(401);
   });
 
@@ -173,7 +171,6 @@ describe("logout", () => {
 });
 
 describe("RBAC", () => {
-  // An EMPLOYEE in the same organization, created directly: invitations arrive in Phase 3.
   async function employeeToken() {
     await register().expect(201);
     const prisma = app.get(PrismaService);

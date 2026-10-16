@@ -1,11 +1,8 @@
+import { existsSync } from "node:fs";
 import { defineConfig } from "prisma/config";
 
-// The repo keeps one .env at the root; CI and production pass real env vars instead.
-try {
-  process.loadEnvFile("../../.env");
-} catch {
-  // no .env file: rely on the environment
-}
+const envFile = "../../.env";
+if (existsSync(envFile)) process.loadEnvFile(envFile);
 
 export default defineConfig({
   schema: "prisma/schema.prisma",

@@ -34,13 +34,11 @@ export type CatalogConfig<T> = {
   fields: CatalogField[];
   schema: z.ZodType;
   columns: Column<T>[];
-  // Form values for editing an existing row.
   toForm: (row: T) => Record<string, string>;
 };
 
 const MANAGE: Permission = "org-structure:manage";
 
-// Departments, positions and branches share one screen: searchable list, create/edit dialog, delete.
 export function CatalogPage<T extends { id: string; name: string; employeeCount: number }>({
   config,
 }: {

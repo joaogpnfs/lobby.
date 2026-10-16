@@ -3,7 +3,6 @@
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useCallback } from "react";
 
-// Filters and page live in the URL, so a filtered list can be shared or bookmarked.
 export function useSearchState() {
   const params = useSearchParams();
   const router = useRouter();
@@ -16,7 +15,6 @@ export function useSearchState() {
         if (value === undefined || value === "") next.delete(key);
         else next.set(key, String(value));
       }
-      // Any filter change goes back to the first page.
       if (!("page" in changes)) next.delete("page");
       const qs = next.toString();
       router.replace(qs ? `${pathname}?${qs}` : pathname, { scroll: false });

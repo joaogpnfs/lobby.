@@ -7,7 +7,6 @@ import {
   PositionsController,
 } from "./org-structure/org-structure.controllers.js";
 
-// People and the structure they sit in: employees, departments, positions, branches.
 @Module({
   controllers: [EmployeesController, DepartmentsController, PositionsController, BranchesController],
   providers: [EmployeesService],

@@ -3,7 +3,6 @@ import { map } from "rxjs";
 import type { ApiSuccess } from "@lobby/types";
 import { Page } from "./pagination.js";
 
-// Wraps every successful handler result as { success: true, data }, plus meta for paginated lists.
 @Injectable()
 export class EnvelopeInterceptor implements NestInterceptor {
   intercept(_ctx: unknown, next: CallHandler) {

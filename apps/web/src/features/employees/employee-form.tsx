@@ -22,7 +22,6 @@ const fromEmployee = (e: EmployeeDto): Values => ({
   birthDate: e.birthDate ?? "",
   document: e.document ?? "",
   hireDate: e.hireDate,
-  // Status can't change after termination, so it isn't part of that form.
   ...(e.status !== "TERMINATED" && { status: e.status }),
   departmentId: e.department?.id ?? "",
   positionId: e.position?.id ?? "",
@@ -30,7 +29,6 @@ const fromEmployee = (e: EmployeeDto): Values => ({
   managerId: e.manager?.id ?? "",
 });
 
-// Create and edit share the form; editing sends every field (the API accepts a partial update).
 export function EmployeeForm({ employee }: { employee?: EmployeeDto }) {
   const router = useRouter();
   const create = useCreateEmployee();

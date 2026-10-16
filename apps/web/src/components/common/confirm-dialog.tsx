@@ -13,7 +13,6 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 
-// For destructive actions: the trigger opens a confirmation; nothing happens until it's confirmed.
 export function ConfirmDialog({
   trigger,
   triggerLabel,

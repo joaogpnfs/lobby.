@@ -51,7 +51,6 @@ export class InvitationsController {
     return this.access.revokeInvitation(id);
   }
 
-  // POST, not GET /:token: keeps the token out of URLs that end up in logs.
   @Public()
   @RateLimit(20)
   @Post("preview")

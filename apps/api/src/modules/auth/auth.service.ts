@@ -14,7 +14,6 @@ export type Session = { accessToken: string; refreshToken: string };
 
 export type MembershipRef = { id: string; userId: string; organizationId: string; role: AuthContext["role"] };
 
-// Verified against when the email doesn't exist, so response time doesn't reveal which emails are registered.
 const DUMMY_HASH = await hash("lobby-timing-equalizer");
 
 const invalidCredentials = () =>
@@ -27,7 +26,6 @@ export class AuthService {
     private readonly audit: AuditService,
   ) {}
 
-  // Creates the account, its organization and an ORG_ADMIN membership in one transaction.
   async register(input: RegisterInput): Promise<Session> {
     const passwordHash = await hash(input.password);
     try {
@@ -58,7 +56,6 @@ export class AuthService {
     }
   }
 
-  // Enters the most recent active membership. Switching organizations comes with its UI.
   async login(input: LoginInput): Promise<Session> {
     const user = await this.prisma.user.findUnique({
       where: { email: input.email },
@@ -83,7 +80,6 @@ export class AuthService {
     return this.startSession(membership);
   }
 
-  // Rotates on every use. A token that was already rotated means it leaked: revoke the whole family.
   async refresh(refreshToken: string): Promise<Session> {
     const current = await this.prisma.refreshToken.findUnique({
       where: { tokenHash: hashToken(refreshToken) },
@@ -103,7 +99,6 @@ export class AuthService {
     const next = newRefreshToken();
     await this.prisma.$transaction(async (tx) => {
       const created = await tx.refreshToken.create({ data: this.tokenRow(membership, next, current.familyId) });
-      // Conditional update: of two concurrent refreshes with the same token, only one wins.
       const { count } = await tx.refreshToken.updateMany({
         where: { id: current.id, revokedAt: null },
         data: { revokedAt: new Date(), replacedById: created.id },
@@ -132,7 +127,6 @@ export class AuthService {
     return { user: m.user, organization: m.organization, role: m.role, permissions: ROLE_PERMISSIONS[m.role] };
   }
 
-  // Also used when an invitation is accepted.
   async startSession(membership: MembershipRef): Promise<Session> {
     const refreshToken = newRefreshToken();
     await this.prisma.refreshToken.create({ data: this.tokenRow(membership, refreshToken, randomUUID()) });

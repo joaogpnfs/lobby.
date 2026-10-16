@@ -4,7 +4,6 @@ import { SearchIcon } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Input } from "@/components/ui/input";
 
-// Waits for a pause in typing before searching, so each keystroke isn't a request.
 export function SearchInput({
   value,
   onSearch,

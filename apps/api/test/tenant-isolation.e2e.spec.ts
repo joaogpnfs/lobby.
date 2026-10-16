@@ -3,9 +3,6 @@ import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { createTestApp, resetState } from "./app.js";
 import { createEmployee, signUp, type Api } from "./fixtures.js";
 
-// Two organizations. Acme must never read, change or even detect anything that belongs to Globex:
-// every foreign id answers 404 (not 403), and lists only ever contain Acme's own rows.
-
 let app: NestFastifyApplication;
 let acme: Api;
 let globex: Api;

@@ -9,13 +9,11 @@ export type AuditEntry = {
   action: string;
   entity: string;
   entityId?: string;
-  // Never passwords, tokens or personal documents.
   metadata?: Prisma.InputJsonValue;
   ipAddress?: string;
   userAgent?: string;
 };
 
-// Append-only log. Pass the transaction client so the entry commits (or rolls back) with the change it describes.
 @Injectable()
 export class AuditService {
   constructor(
@@ -23,12 +21,10 @@ export class AuditService {
     private readonly ctx: RequestContext,
   ) {}
 
-  // IP and user agent come from the current request unless given.
   async log(entry: AuditEntry, tx: Prisma.TransactionClient = this.prisma) {
     await tx.auditLog.create({ data: { ...this.ctx.meta, ...entry } });
   }
 
-  // Shorthand for the authenticated caller acting on their own organization.
   async record(
     action: string,
     entity: string,

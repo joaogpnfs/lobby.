@@ -6,7 +6,6 @@ import type { AppClsStore } from "../../common/context.js";
 import { PERMISSIONS } from "../../common/decorators.js";
 import { AppException } from "../../common/errors.js";
 
-// Global, runs after JwtAuthGuard. Handlers without @RequirePermissions only need a valid session.
 @Injectable()
 export class PermissionsGuard implements CanActivate {
   constructor(

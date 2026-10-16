@@ -5,7 +5,6 @@ import { cn } from "@/lib/utils";
 
 export type Column<T> = { header: string; cell: (row: T) => ReactNode; className?: string };
 
-// Plain table; when `href` is given the first cell links to the row's page (keyboard and middle-click work).
 export function DataTable<T extends { id: string }>({
   columns,
   rows,

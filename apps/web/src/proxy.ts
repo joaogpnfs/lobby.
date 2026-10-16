@@ -1,14 +1,11 @@
 import { NextResponse, type NextRequest } from "next/server";
 
-// Strict CSP with a fresh nonce per request: Next reads the nonce from this header and stamps it on its scripts.
-// The access token lives in memory, so blocking injected scripts is what keeps an XSS from stealing it.
 export function proxy(request: NextRequest) {
   const nonce = Buffer.from(crypto.randomUUID()).toString("base64");
   const isDev = process.env.NODE_ENV === "development";
   const csp = [
     "default-src 'self'",
     `script-src 'self' 'nonce-${nonce}' 'strict-dynamic'${isDev ? " 'unsafe-eval'" : ""}`,
-    // Inline style attributes come from React/Base UI; style injection is far less dangerous than script.
     "style-src 'self' 'unsafe-inline'",
     "img-src 'self' blob: data:",
     "font-src 'self'",

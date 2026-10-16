@@ -27,7 +27,6 @@ import { useMe } from "@/features/auth/api";
 import { ROLE_LABEL } from "@/lib/labels";
 import { useInvite } from "./api";
 
-// Until an email provider is chosen, the link is shown here for the inviter to send.
 export function InviteDialog({
   trigger,
   employee,
@@ -39,7 +38,6 @@ export function InviteDialog({
   const invite = useInvite();
   const [created, setCreated] = useState<CreatedInvitation | null>(null);
   const [copied, setCopied] = useState(false);
-  // Only an admin can hand out admin; the API enforces it too.
   const roles = ROLES.filter((r) => r !== "ORG_ADMIN" || me.data?.role === "ORG_ADMIN");
 
   const { register, handleSubmit, formState, reset } = useForm<CreateInvitationInput>({

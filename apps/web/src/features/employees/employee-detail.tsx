@@ -143,7 +143,6 @@ function Section({ title, children }: { title: string; children: ReactNode }) {
   );
 }
 
-// Empty values read as a dash; hidden sensitive fields come back null and show the same way.
 function Item({ label, children }: { label: string; children: ReactNode }) {
   return (
     <div className="grid grid-cols-[10rem_1fr] gap-3 text-sm">

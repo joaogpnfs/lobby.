@@ -24,7 +24,6 @@ export const useEmployees = (query: string) =>
 export const useEmployee = (id: string) =>
   useQuery({ queryKey: keys.detail(id), queryFn: () => apiFetch<EmployeeDto>(`/employees/${id}`) });
 
-// Every write can change lists, counts on catalogs and the person's page: refresh them all.
 function useEmployeeMutation<V>(fn: (vars: V) => Promise<EmployeeDto | null>) {
   const queryClient = useQueryClient();
   return useMutation({

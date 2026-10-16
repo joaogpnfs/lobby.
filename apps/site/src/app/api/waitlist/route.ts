@@ -1,5 +1,3 @@
-// ponytail: no storage yet, emails only reach the server log. Persist them
-// (API table or email-provider audience) before sharing the site publicly.
 export async function POST(req: Request) {
   const body: unknown = await req.json().catch(() => null);
   const email =

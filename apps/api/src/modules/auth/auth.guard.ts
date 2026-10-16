@@ -12,8 +12,6 @@ import { verifyAccessToken } from "./tokens.js";
 export const unauthorized = () =>
   new AppException(ErrorCode.UNAUTHORIZED, "Authentication required", HttpStatus.UNAUTHORIZED);
 
-// Global. Validates the access token, then loads the membership so a disabled user or membership
-// loses access immediately and role changes apply without waiting for the token to expire.
 @Injectable()
 export class JwtAuthGuard implements CanActivate {
   constructor(
