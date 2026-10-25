@@ -21,6 +21,7 @@ export type AuthTokens = { accessToken: string };
 
 export type Me = {
   user: { id: string; name: string; email: string; avatarUrl: string | null; linkedinConnected: boolean };
+  employeeId: string | null;
   organization: { id: string; name: string };
   role: Role;
   permissions: readonly Permission[];

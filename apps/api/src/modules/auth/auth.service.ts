@@ -116,17 +116,24 @@ export class AuthService {
   }
 
   async me(ctx: AuthContext): Promise<Me> {
-    const m = await this.prisma.organizationMembership.findUniqueOrThrow({
-      where: { id: ctx.membershipId },
-      select: {
-        role: true,
-        user: { select: { id: true, name: true, email: true, avatarUrl: true, linkedinSub: true } },
-        organization: { select: { id: true, name: true } },
-      },
-    });
+    const [m, employee] = await Promise.all([
+      this.prisma.organizationMembership.findUniqueOrThrow({
+        where: { id: ctx.membershipId },
+        select: {
+          role: true,
+          user: { select: { id: true, name: true, email: true, avatarUrl: true, linkedinSub: true } },
+          organization: { select: { id: true, name: true } },
+        },
+      }),
+      this.prisma.employee.findFirst({
+        where: { organizationId: ctx.organizationId, userId: ctx.userId, deletedAt: null },
+        select: { id: true },
+      }),
+    ]);
     const { linkedinSub, ...user } = m.user;
     return {
       user: { ...user, linkedinConnected: linkedinSub !== null },
+      employeeId: employee?.id ?? null,
       organization: m.organization,
       role: m.role,
       permissions: ROLE_PERMISSIONS[m.role],

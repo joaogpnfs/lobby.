@@ -9,6 +9,7 @@ allowBuilds:
   "@scarf/scarf": false
   sharp: false
   unrs-resolver: false
+  msgpackr-extract: false
 
 # Patched versions of vulnerable transitive deps (pnpm audit). Remove once upstream bumps them.
 overrides:

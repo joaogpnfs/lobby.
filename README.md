@@ -10,6 +10,7 @@ Gestão de pessoas para empresas brasileiras. SaaS B2B multi-tenant: cada empres
 - **Acessos**: convite por link com papel (administrador, RH, gestor, colaborador), troca de papel e remoção de acesso.
 - **Permissões por papel**: o RH vê todos; o gestor vê a si e à equipe direta; o colaborador vê só o próprio perfil. Dados sensíveis (CPF, telefone, nascimento) só para o RH e para a própria pessoa.
 - **Documentos**: contratos, atestados e outros arquivos por colaborador, enviados direto para o S3 (até 20 MB, PDF, imagem ou DOCX), com vencimento opcional e download por link temporário. O RH vê todos; cada pessoa vê só os seus.
+- **Férias**: o colaborador pede de 5 a 30 dias corridos, o gestor (ou o RH) aprova ou recusa com motivo, e o banco impede períodos sobrepostos. Avisos aparecem em Notificações, e o início mostra quem está de férias hoje e o que espera sua aprovação.
 - **LinkedIn**: link do perfil no cadastro, importação do PDF do perfil (cargo, experiências, formação e competências, com prévia antes de salvar) e "Entrar com LinkedIn" para quem conectou a conta.
 - **Auditoria**: login, cadastros e alterações ficam registrados, sem dados pessoais no registro.
 

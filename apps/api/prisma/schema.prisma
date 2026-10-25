@@ -44,10 +44,12 @@ model User {
   createdAt    DateTime   @default(now())
   updatedAt    DateTime   @updatedAt
 
-  memberships   OrganizationMembership[]
-  refreshTokens RefreshToken[]
-  employees     Employee[]
-  documents     Document[]
+  memberships       OrganizationMembership[]
+  refreshTokens     RefreshToken[]
+  employees         Employee[]
+  documents         Document[]
+  notifications     Notification[]
+  vacationDecisions VacationRequest[]
 }
 
 model Organization {
@@ -62,14 +64,16 @@ model Organization {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  memberships OrganizationMembership[]
-  auditLogs   AuditLog[]
-  departments Department[]
-  positions   Position[]
-  branches    Branch[]
-  employees   Employee[]
-  invitations Invitation[]
-  documents   Document[]
+  memberships   OrganizationMembership[]
+  auditLogs     AuditLog[]
+  departments   Department[]
+  positions     Position[]
+  branches      Branch[]
+  employees     Employee[]
+  invitations   Invitation[]
+  documents     Document[]
+  vacations     VacationRequest[]
+  notifications Notification[]
 }
 
 model OrganizationMembership {
@@ -209,16 +213,17 @@ model Employee {
   createdAt           DateTime       @default(now())
   updatedAt           DateTime       @updatedAt
 
-  organization       Organization @relation(fields: [organizationId], references: [id])
-  user               User?        @relation(fields: [userId], references: [id])
-  department         Department?  @relation(fields: [departmentId], references: [id], onDelete: Restrict)
-  position           Position?    @relation(fields: [positionId], references: [id], onDelete: Restrict)
-  branch             Branch?      @relation(fields: [branchId], references: [id], onDelete: Restrict)
-  manager            Employee?    @relation("Reports", fields: [managerId], references: [id])
-  reports            Employee[]   @relation("Reports")
-  managedDepartments Department[] @relation("DepartmentManager")
+  organization       Organization      @relation(fields: [organizationId], references: [id])
+  user               User?             @relation(fields: [userId], references: [id])
+  department         Department?       @relation(fields: [departmentId], references: [id], onDelete: Restrict)
+  position           Position?         @relation(fields: [positionId], references: [id], onDelete: Restrict)
+  branch             Branch?           @relation(fields: [branchId], references: [id], onDelete: Restrict)
+  manager            Employee?         @relation("Reports", fields: [managerId], references: [id])
+  reports            Employee[]        @relation("Reports")
+  managedDepartments Department[]      @relation("DepartmentManager")
   invitations        Invitation[]
   documents          Document[]
+  vacations          VacationRequest[]
 
   @@unique([organizationId, userId])
   @@unique([organizationId, email], where: raw("\"deletedAt\" IS NULL"))
@@ -286,4 +291,50 @@ model Document {
   @@index([organizationId, employeeId])
   @@index([organizationId, expiresAt])
   @@index([status, createdAt])
+}
+
+enum VacationStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  CANCELLED
+  COMPLETED
+}
+
+model VacationRequest {
+  id             String         @id @default(uuid()) @db.Uuid
+  organizationId String         @db.Uuid
+  employeeId     String         @db.Uuid
+  startDate      DateTime       @db.Date
+  endDate        DateTime       @db.Date
+  days           Int
+  status         VacationStatus @default(PENDING)
+  reason         String?
+  decisionNote   String?
+  decidedById    String?        @db.Uuid
+  decidedAt      DateTime?
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
+
+  organization Organization @relation(fields: [organizationId], references: [id])
+  employee     Employee     @relation(fields: [employeeId], references: [id])
+  decidedBy    User?        @relation(fields: [decidedById], references: [id])
+
+  @@index([organizationId, status, startDate])
+  @@index([employeeId, startDate])
+}
+
+model Notification {
+  id             String    @id @default(uuid()) @db.Uuid
+  organizationId String    @db.Uuid
+  userId         String    @db.Uuid
+  type           String
+  data           Json
+  readAt         DateTime?
+  createdAt      DateTime  @default(now())
+
+  organization Organization @relation(fields: [organizationId], references: [id])
+  user         User         @relation(fields: [userId], references: [id])
+
+  @@index([userId, organizationId, createdAt])
 }

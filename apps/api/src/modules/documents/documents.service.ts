@@ -1,5 +1,5 @@
 import { randomUUID } from "node:crypto";
-import { Injectable, Logger, type OnApplicationBootstrap, type OnModuleDestroy } from "@nestjs/common";
+import { Injectable } from "@nestjs/common";
 import {
   EMPLOYEE_SCOPE,
   type CreateDocumentInput,
@@ -11,7 +11,6 @@ import {
 import { RequestContext } from "../../common/context.js";
 import { invalid, notFound } from "../../common/errors.js";
 import { Page, paging } from "../../common/pagination.js";
-import { env } from "../../env.js";
 import type { Prisma } from "../../generated/prisma/client.js";
 import { PrismaService } from "../../prisma.service.js";
 import { AuditService } from "../audit/audit.service.js";
@@ -19,7 +18,6 @@ import { isoDate, personName, personRef, toDate } from "../employees/employee.ma
 import { StorageService } from "./storage.service.js";
 
 const STALE_UPLOAD_MS = 24 * 60 * 60 * 1000;
-const PURGE_EVERY_MS = 60 * 60 * 1000;
 
 const select = {
   id: true,
@@ -52,10 +50,7 @@ function toDto(d: Row): DocumentDto {
 }
 
 @Injectable()
-export class DocumentsService implements OnApplicationBootstrap, OnModuleDestroy {
-  private readonly logger = new Logger("Documents");
-  private purgeTimer?: NodeJS.Timeout;
-
+export class DocumentsService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly audit: AuditService,
@@ -157,17 +152,6 @@ export class DocumentsService implements OnApplicationBootstrap, OnModuleDestroy
     for (const doc of stale) await this.storage.remove(doc.storageKey);
     await this.prisma.document.deleteMany({ where: { id: { in: stale.map((d) => d.id) } } });
     return stale.length;
-  }
-
-  onApplicationBootstrap() {
-    if (env.NODE_ENV === "test") return;
-    this.purgeTimer = setInterval(() => {
-      this.purgeStaleUploads().catch((err: unknown) => this.logger.error(err));
-    }, PURGE_EVERY_MS).unref();
-  }
-
-  onModuleDestroy() {
-    clearInterval(this.purgeTimer);
   }
 
   private visibleWhere(): Prisma.DocumentWhereInput {

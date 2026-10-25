@@ -1,13 +1,26 @@
 "use client";
 
 import type { Me, Permission } from "@lobby/types";
-import { Briefcase, Building2, FileText, House, MapPin, Menu, Settings, Users, type LucideIcon } from "lucide-react";
+import {
+  Bell,
+  Briefcase,
+  Building2,
+  CalendarDays,
+  FileText,
+  House,
+  MapPin,
+  Menu,
+  Settings,
+  Users,
+  type LucideIcon,
+} from "lucide-react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import { Button } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { useLogout, useMe } from "@/features/auth/api";
+import { useNotifications } from "@/features/notifications/api";
 import { ApiError } from "@/lib/api-client";
 import { ROLE_LABEL } from "@/lib/labels";
 import { cn } from "@/lib/utils";
@@ -18,9 +31,11 @@ const NAV: NavItem[] = [
   { href: "/dashboard", label: "Início", icon: House },
   { href: "/employees", label: "Colaboradores", icon: Users, permission: "employees:read" },
   { href: "/documents", label: "Documentos", icon: FileText, permission: "documents:read" },
+  { href: "/vacations", label: "Férias", icon: CalendarDays, permission: "vacations:read" },
   { href: "/departments", label: "Departamentos", icon: Building2, permission: "org-structure:manage" },
   { href: "/positions", label: "Cargos", icon: Briefcase, permission: "org-structure:manage" },
   { href: "/branches", label: "Filiais", icon: MapPin, permission: "org-structure:manage" },
+  { href: "/notifications", label: "Notificações", icon: Bell },
   { href: "/settings", label: "Configurações", icon: Settings },
 ];
 
@@ -65,6 +80,7 @@ function Sidebar({ me, onNavigate }: { me: Me; onNavigate?: () => void }) {
   const pathname = usePathname();
   const router = useRouter();
   const logout = useLogout();
+  const unread = useNotifications().data?.unread ?? 0;
   const items = NAV.filter((i) => !i.permission || me.permissions.includes(i.permission));
 
   return (
@@ -92,6 +108,12 @@ function Sidebar({ me, onNavigate }: { me: Me; onNavigate?: () => void }) {
             >
               <Icon aria-hidden className={cn("size-4", active && "text-primary")} />
               {label}
+              {href === "/notifications" && unread > 0 && (
+                <span className="ml-auto rounded-full bg-primary px-1.5 text-xs font-medium text-primary-foreground tabular-nums">
+                  {unread}
+                  <span className="sr-only"> não lidas</span>
+                </span>
+              )}
             </Link>
           );
         })}
@@ -123,6 +145,7 @@ function Sidebar({ me, onNavigate }: { me: Me; onNavigate?: () => void }) {
 
 function MobileBar({ me }: { me: Me }) {
   const [open, setOpen] = useState(false);
+  const unread = useNotifications().data?.unread ?? 0;
   return (
     <header className="flex items-center gap-3 border-b px-4 py-2 md:hidden">
       <Sheet open={open} onOpenChange={setOpen}>
@@ -137,6 +160,14 @@ function MobileBar({ me }: { me: Me }) {
       <span className="font-bold tracking-tight">
         lobby<span className="text-primary">.</span>
       </span>
+      <Link
+        href="/notifications"
+        className={buttonVariants({ variant: "ghost", size: "icon", className: "relative ml-auto" })}
+        aria-label={unread > 0 ? `Notificações, ${unread} não lidas` : "Notificações"}
+      >
+        <Bell aria-hidden />
+        {unread > 0 && <span aria-hidden className="absolute top-1.5 right-1.5 size-2 rounded-full bg-primary" />}
+      </Link>
     </header>
   );
 }

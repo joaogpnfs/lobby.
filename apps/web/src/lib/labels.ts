@@ -1,4 +1,4 @@
-import type { DocumentType, EmployeeStatus, Role } from "@lobby/types";
+import type { DocumentType, EmployeeStatus, Role, VacationStatus } from "@lobby/types";
 
 export const ROLE_LABEL: Record<Role, string> = {
   ORG_ADMIN: "Administrador",
@@ -31,3 +31,13 @@ export const formatSize = (bytes: number) =>
   bytes < 1024 * 1024
     ? `${Math.max(1, Math.round(bytes / 1024))}\u00a0KB`
     : `${sizeFormat.format(bytes / 1024 / 1024)}\u00a0MB`;
+
+export const VACATION_STATUS_LABEL: Record<VacationStatus, string> = {
+  PENDING: "Aguardando",
+  APPROVED: "Aprovado",
+  REJECTED: "Recusado",
+  CANCELLED: "Cancelado",
+  COMPLETED: "Concluído",
+};
+
+export const formatPeriod = (start: string, end: string) => `${formatDate(start)} a ${formatDate(end)}`;
