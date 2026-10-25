@@ -1,7 +1,7 @@
 "use client";
 
 import type { Me, Permission } from "@lobby/types";
-import { Briefcase, Building2, House, MapPin, Menu, Settings, Users, type LucideIcon } from "lucide-react";
+import { Briefcase, Building2, FileText, House, MapPin, Menu, Settings, Users, type LucideIcon } from "lucide-react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
@@ -17,6 +17,7 @@ type NavItem = { href: string; label: string; icon: LucideIcon; permission?: Per
 const NAV: NavItem[] = [
   { href: "/dashboard", label: "Início", icon: House },
   { href: "/employees", label: "Colaboradores", icon: Users, permission: "employees:read" },
+  { href: "/documents", label: "Documentos", icon: FileText, permission: "documents:read" },
   { href: "/departments", label: "Departamentos", icon: Building2, permission: "org-structure:manage" },
   { href: "/positions", label: "Cargos", icon: Briefcase, permission: "org-structure:manage" },
   { href: "/branches", label: "Filiais", icon: MapPin, permission: "org-structure:manage" },
@@ -97,9 +98,14 @@ function Sidebar({ me, onNavigate }: { me: Me; onNavigate?: () => void }) {
       </nav>
 
       <div className="mt-auto grid gap-2 border-t px-2 pt-4">
-        <div className="grid">
-          <span className="truncate text-sm font-medium">{me.user.name}</span>
-          <span className="text-xs text-muted-foreground">{ROLE_LABEL[me.role]}</span>
+        <div className="flex items-center gap-2.5">
+          {me.user.avatarUrl && (
+            <img src={me.user.avatarUrl} alt="" className="size-8 shrink-0 rounded-full" referrerPolicy="no-referrer" />
+          )}
+          <div className="grid min-w-0">
+            <span className="truncate text-sm font-medium">{me.user.name}</span>
+            <span className="text-xs text-muted-foreground">{ROLE_LABEL[me.role]}</span>
+          </div>
         </div>
         <Button
           variant="ghost"

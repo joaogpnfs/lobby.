@@ -25,6 +25,13 @@ const schema = z.object({
   REDIS_URL: z.url(),
   TRUST_PROXY: z.string().default("loopback"),
   JWT_ACCESS_SECRET: z.string().min(32, "Generate with: openssl rand -base64 48"),
+  AWS_REGION: z.string().default("us-east-1"),
+  AWS_ACCESS_KEY_ID: z.string().min(1),
+  AWS_SECRET_ACCESS_KEY: z.string().min(1),
+  AWS_S3_BUCKET: z.string().min(1),
+  S3_ENDPOINT: z.preprocess(emptyAsUndefined, z.url().optional()),
+  LINKEDIN_CLIENT_ID: z.preprocess(emptyAsUndefined, z.string().optional()),
+  LINKEDIN_CLIENT_SECRET: z.preprocess(emptyAsUndefined, z.string().optional()),
   SENTRY_DSN: z.preprocess(emptyAsUndefined, z.url().optional()),
 });
 

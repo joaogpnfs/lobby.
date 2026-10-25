@@ -1,7 +1,9 @@
-import { HttpStatus, Injectable } from "@nestjs/common";
+import { Injectable } from "@nestjs/common";
 import {
   EMPLOYEE_SCOPE,
-  ErrorCode,
+  ROLE_PERMISSIONS,
+  type ProfileImport,
+  type SaveProfessionalProfileInput,
   type CreateEmployeeInput,
   type EmployeeDto,
   type EmployeeListQuery,
@@ -9,14 +11,13 @@ import {
   type UpdateEmployeeInput,
 } from "@lobby/types";
 import { RequestContext } from "../../common/context.js";
-import { AppException, notFound } from "../../common/errors.js";
+import { forbidden, invalid, notFound } from "../../common/errors.js";
 import { Page, paging } from "../../common/pagination.js";
 import type { Prisma } from "../../generated/prisma/client.js";
 import { PrismaService } from "../../prisma.service.js";
 import { AuditService } from "../audit/audit.service.js";
 import { detailSelect, isoDate, listSelect, toDate, toDetail, toListItem } from "./employee.mapper.js";
-
-const invalid = (message: string) => new AppException(ErrorCode.VALIDATION_ERROR, message, HttpStatus.BAD_REQUEST);
+import { parseLinkedinProfile, pdfLines } from "./linkedin-pdf.js";
 
 @Injectable()
 export class EmployeesService {
@@ -60,7 +61,7 @@ export class EmployeesService {
     const visible = await this.visibleWhere();
     const row = await this.prisma.employee.findFirst({ where: { AND: [visible, { id }] }, select: detailSelect });
     if (!row) throw notFound("Employee");
-    return toDetail(row, await this.seesSensitive(id));
+    return toDetail(row, await this.seesSensitive(id), await this.canEditProfile(id));
   }
 
   async create(input: CreateEmployeeInput): Promise<EmployeeDto> {
@@ -125,6 +126,37 @@ export class EmployeesService {
     const me = await this.myEmployeeId();
     if (!me) return { id: { in: [] } };
     return scope === "team" ? { ...base, OR: [{ id: me }, { managerId: me }] } : { ...base, id: me };
+  }
+
+  async importProfile(id: string, pdf: Buffer): Promise<ProfileImport> {
+    await this.assertCanEditProfile(id);
+    const lines = await pdfLines(new Uint8Array(pdf)).catch(() => {
+      throw invalid("Could not read this PDF");
+    });
+    return parseLinkedinProfile(lines);
+  }
+
+  async saveProfile(id: string, input: SaveProfessionalProfileInput): Promise<EmployeeDto> {
+    await this.assertCanEditProfile(id);
+    await this.prisma.$transaction(async (tx) => {
+      await tx.employee.update({
+        where: { id },
+        data: { professionalProfile: input.profile, linkedinUrl: input.linkedinUrl },
+      });
+      await this.audit.record("EMPLOYEE_PROFILE_UPDATED", "Employee", id, undefined, tx);
+    });
+    return this.get(id);
+  }
+
+  private async canEditProfile(employeeId: string) {
+    const { role } = this.ctx.auth;
+    if (EMPLOYEE_SCOPE[role] === "all" && ROLE_PERMISSIONS[role].includes("employees:update")) return true;
+    return (await this.myEmployeeId()) === employeeId;
+  }
+
+  private async assertCanEditProfile(id: string) {
+    await this.findOwn(id);
+    if (!(await this.canEditProfile(id))) throw forbidden();
   }
 
   private async seesSensitive(employeeId: string) {

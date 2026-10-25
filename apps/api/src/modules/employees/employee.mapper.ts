@@ -1,4 +1,4 @@
-import type { EmployeeDto, EmployeeListItem, Ref } from "@lobby/types";
+import type { EmployeeDto, EmployeeListItem, ProfessionalProfile, Ref } from "@lobby/types";
 import type { Prisma } from "../../generated/prisma/client.js";
 
 export const personName = { id: true, firstName: true, lastName: true, preferredName: true } as const;
@@ -27,6 +27,8 @@ export const detailSelect = {
   terminationDate: true,
   terminationReason: true,
   userId: true,
+  linkedinUrl: true,
+  professionalProfile: true,
   reports: { where: { deletedAt: null }, select: personName, orderBy: { firstName: "asc" } },
 } satisfies Prisma.EmployeeSelect;
 type DetailRow = Prisma.EmployeeGetPayload<{ select: typeof detailSelect }>;
@@ -50,7 +52,7 @@ export function toListItem(e: ListRow): EmployeeListItem {
   };
 }
 
-export function toDetail(e: DetailRow, full: boolean): EmployeeDto {
+export function toDetail(e: DetailRow, full: boolean, canEditProfile: boolean): EmployeeDto {
   return {
     ...toListItem(e),
     firstName: e.firstName,
@@ -62,6 +64,9 @@ export function toDetail(e: DetailRow, full: boolean): EmployeeDto {
     terminationDate: e.terminationDate && isoDate(e.terminationDate),
     terminationReason: full ? e.terminationReason : null,
     hasAccess: e.userId !== null,
+    linkedinUrl: e.linkedinUrl,
+    professionalProfile: e.professionalProfile as ProfessionalProfile | null,
+    canEditProfile,
     reports: e.reports.map(personRef),
   };
 }

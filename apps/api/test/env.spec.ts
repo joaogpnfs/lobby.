@@ -5,6 +5,9 @@ const valid = {
   DATABASE_URL: "postgresql://u:p@localhost:5432/db",
   REDIS_URL: "redis://localhost:6379",
   JWT_ACCESS_SECRET: "x".repeat(32),
+  AWS_ACCESS_KEY_ID: "key",
+  AWS_SECRET_ACCESS_KEY: "secret",
+  AWS_S3_BUCKET: "bucket",
 };
 
 describe("parseEnv", () => {

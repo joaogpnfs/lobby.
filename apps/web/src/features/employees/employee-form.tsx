@@ -21,6 +21,7 @@ const fromEmployee = (e: EmployeeDto): Values => ({
   phone: e.phone ?? "",
   birthDate: e.birthDate ?? "",
   document: e.document ?? "",
+  linkedinUrl: e.linkedinUrl ?? "",
   hireDate: e.hireDate,
   ...(e.status !== "TERMINATED" && { status: e.status }),
   departmentId: e.department?.id ?? "",
@@ -92,6 +93,14 @@ export function EmployeeForm({ employee }: { employee?: EmployeeDto }) {
           placeholder="000.000.000-00"
           error={e.document?.message}
           {...register("document")}
+        />
+        <FormField
+          id="linkedinUrl"
+          label="LinkedIn"
+          type="url"
+          placeholder="https://www.linkedin.com/in/nome"
+          error={e.linkedinUrl?.message}
+          {...register("linkedinUrl")}
         />
       </fieldset>
 

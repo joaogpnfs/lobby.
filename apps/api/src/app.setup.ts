@@ -4,7 +4,7 @@ import helmet from "@fastify/helmet";
 import { HttpStatus, StandardSchemaValidationPipe } from "@nestjs/common";
 import { FastifyAdapter, type NestFastifyApplication } from "@nestjs/platform-fastify";
 import { DocumentBuilder, SwaggerModule } from "@nestjs/swagger";
-import { ErrorCode } from "@lobby/types";
+import { ErrorCode, MAX_PROFILE_PDF_SIZE } from "@lobby/types";
 import { AllExceptionsFilter, AppException } from "./common/errors.js";
 import { EnvelopeInterceptor } from "./common/envelope.interceptor.js";
 import { env } from "./env.js";
@@ -27,6 +27,14 @@ export async function configureApp(app: NestFastifyApplication) {
 
   await app.register(helmet, { contentSecurityPolicy: false });
   await app.register(cookie);
+  app
+    .getHttpAdapter()
+    .getInstance()
+    .addContentTypeParser(
+      "application/pdf",
+      { parseAs: "buffer", bodyLimit: MAX_PROFILE_PDF_SIZE },
+      (_req, body, done) => done(null, body),
+    );
   app.enableCors({ origin: env.CORS_ORIGINS, credentials: true });
 
   app.useGlobalPipes(

@@ -9,9 +9,11 @@ Gestão de pessoas para empresas brasileiras. SaaS B2B multi-tenant: cada empres
 - **Colaboradores**: cadastro, edição, gestor direto, busca, filtros, paginação, desligamento e exclusão com histórico preservado.
 - **Acessos**: convite por link com papel (administrador, RH, gestor, colaborador), troca de papel e remoção de acesso.
 - **Permissões por papel**: o RH vê todos; o gestor vê a si e à equipe direta; o colaborador vê só o próprio perfil. Dados sensíveis (CPF, telefone, nascimento) só para o RH e para a própria pessoa.
+- **Documentos**: contratos, atestados e outros arquivos por colaborador, enviados direto para o S3 (até 20 MB, PDF, imagem ou DOCX), com vencimento opcional e download por link temporário. O RH vê todos; cada pessoa vê só os seus.
+- **LinkedIn**: link do perfil no cadastro, importação do PDF do perfil (cargo, experiências, formação e competências, com prévia antes de salvar) e "Entrar com LinkedIn" para quem conectou a conta.
 - **Auditoria**: login, cadastros e alterações ficam registrados, sem dados pessoais no registro.
 
-Em seguida: documentos, férias, benefícios, onboarding, ponto e relatórios.
+Em seguida: férias, benefícios, onboarding, ponto e relatórios.
 
 ## Stack
 

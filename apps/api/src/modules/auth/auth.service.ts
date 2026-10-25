@@ -120,11 +120,17 @@ export class AuthService {
       where: { id: ctx.membershipId },
       select: {
         role: true,
-        user: { select: { id: true, name: true, email: true } },
+        user: { select: { id: true, name: true, email: true, avatarUrl: true, linkedinSub: true } },
         organization: { select: { id: true, name: true } },
       },
     });
-    return { user: m.user, organization: m.organization, role: m.role, permissions: ROLE_PERMISSIONS[m.role] };
+    const { linkedinSub, ...user } = m.user;
+    return {
+      user: { ...user, linkedinConnected: linkedinSub !== null },
+      organization: m.organization,
+      role: m.role,
+      permissions: ROLE_PERMISSIONS[m.role],
+    };
   }
 
   async startSession(membership: MembershipRef): Promise<Session> {

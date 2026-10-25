@@ -20,7 +20,7 @@ export type LoginInput = z.infer<typeof loginSchema>;
 export type AuthTokens = { accessToken: string };
 
 export type Me = {
-  user: { id: string; name: string; email: string };
+  user: { id: string; name: string; email: string; avatarUrl: string | null; linkedinConnected: boolean };
   organization: { id: string; name: string };
   role: Role;
   permissions: readonly Permission[];

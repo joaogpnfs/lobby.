@@ -39,12 +39,15 @@ model User {
   status       UserStatus @default(ACTIVE)
   // Platform role, not tied to an organization (no console in the MVP).
   isSuperAdmin Boolean    @default(false)
+  linkedinSub  String?    @unique
+  avatarUrl    String?
   createdAt    DateTime   @default(now())
   updatedAt    DateTime   @updatedAt
 
   memberships   OrganizationMembership[]
   refreshTokens RefreshToken[]
   employees     Employee[]
+  documents     Document[]
 }
 
 model Organization {
@@ -66,6 +69,7 @@ model Organization {
   branches    Branch[]
   employees   Employee[]
   invitations Invitation[]
+  documents   Document[]
 }
 
 model OrganizationMembership {
@@ -178,30 +182,32 @@ model Branch {
 }
 
 model Employee {
-  id                String         @id @default(uuid()) @db.Uuid
-  organizationId    String         @db.Uuid
+  id                  String         @id @default(uuid()) @db.Uuid
+  organizationId      String         @db.Uuid
   // Login account, once the person accepts an invitation.
-  userId            String?        @db.Uuid
-  firstName         String
-  lastName          String
-  preferredName     String?
-  email             String
-  phone             String?
-  birthDate         DateTime?      @db.Date
+  userId              String?        @db.Uuid
+  firstName           String
+  lastName            String
+  preferredName       String?
+  email               String
+  phone               String?
+  birthDate           DateTime?      @db.Date
   // CPF. Masked everywhere except the detail view for HR.
-  document          String?
-  hireDate          DateTime       @db.Date
-  terminationDate   DateTime?      @db.Date
-  terminationReason String?
-  status            EmployeeStatus @default(ACTIVE)
-  departmentId      String?        @db.Uuid
-  positionId        String?        @db.Uuid
-  branchId          String?        @db.Uuid
-  managerId         String?        @db.Uuid
-  avatar            String?
-  deletedAt         DateTime?
-  createdAt         DateTime       @default(now())
-  updatedAt         DateTime       @updatedAt
+  document            String?
+  hireDate            DateTime       @db.Date
+  terminationDate     DateTime?      @db.Date
+  terminationReason   String?
+  status              EmployeeStatus @default(ACTIVE)
+  departmentId        String?        @db.Uuid
+  positionId          String?        @db.Uuid
+  branchId            String?        @db.Uuid
+  managerId           String?        @db.Uuid
+  avatar              String?
+  linkedinUrl         String?
+  professionalProfile Json?
+  deletedAt           DateTime?
+  createdAt           DateTime       @default(now())
+  updatedAt           DateTime       @updatedAt
 
   organization       Organization @relation(fields: [organizationId], references: [id])
   user               User?        @relation(fields: [userId], references: [id])
@@ -212,6 +218,7 @@ model Employee {
   reports            Employee[]   @relation("Reports")
   managedDepartments Department[] @relation("DepartmentManager")
   invitations        Invitation[]
+  documents          Document[]
 
   @@unique([organizationId, userId])
   @@unique([organizationId, email], where: raw("\"deletedAt\" IS NULL"))
@@ -240,4 +247,43 @@ model Invitation {
   employee     Employee?    @relation(fields: [employeeId], references: [id])
 
   @@index([organizationId, createdAt])
+}
+
+enum DocumentType {
+  CONTRACT
+  IDENTITY
+  CERTIFICATE
+  PAYSLIP
+  MEDICAL
+  OTHER
+}
+
+enum DocumentStatus {
+  PENDING_UPLOAD
+  AVAILABLE
+  DELETED
+}
+
+model Document {
+  id             String         @id @default(uuid()) @db.Uuid
+  organizationId String         @db.Uuid
+  employeeId     String         @db.Uuid
+  name           String
+  type           DocumentType
+  mimeType       String
+  size           Int
+  storageKey     String         @unique
+  status         DocumentStatus @default(PENDING_UPLOAD)
+  expiresAt      DateTime?      @db.Date
+  uploadedById   String         @db.Uuid
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
+
+  organization Organization @relation(fields: [organizationId], references: [id])
+  employee     Employee     @relation(fields: [employeeId], references: [id])
+  uploadedBy   User         @relation(fields: [uploadedById], references: [id])
+
+  @@index([organizationId, employeeId])
+  @@index([organizationId, expiresAt])
+  @@index([status, createdAt])
 }

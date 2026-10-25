@@ -6,15 +6,17 @@ import { expect } from "vitest";
 export type Api = ReturnType<typeof client>;
 
 export function client(app: NestFastifyApplication, token?: string) {
-  const call = (method: "get" | "post" | "patch" | "delete", path: string) => {
+  const call = (method: "get" | "post" | "put" | "patch" | "delete", path: string) => {
     const req = request(app.getHttpServer())[method](`/api/v1${path}`);
     return token ? req.auth(token, { type: "bearer" }) : req;
   };
   return {
     get: (path: string) => call("get", path),
     post: (path: string, body?: object) => call("post", path).send(body),
+    put: (path: string, body: object) => call("put", path).send(body),
     patch: (path: string, body: object) => call("patch", path).send(body),
     delete: (path: string) => call("delete", path),
+    upload: (path: string, body: Buffer, type: string) => call("post", path).set("content-type", type).send(body),
   };
 }
 

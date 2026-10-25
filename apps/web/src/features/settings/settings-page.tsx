@@ -16,13 +16,15 @@ import { meKey, useCan, useMe } from "@/features/auth/api";
 import { apiFetch } from "@/lib/api-client";
 import { emptyAsNull } from "@/lib/forms";
 import { ROLE_LABEL, formatDate } from "@/lib/labels";
+import { LinkedinSection } from "./linkedin-section";
 
-export function SettingsPage() {
+export function SettingsPage({ linkedin }: { linkedin?: { result?: string } }) {
   const can = useCan();
   return (
     <div className="grid max-w-4xl gap-10">
       <PageHeader title="Configurações" description="Dados da empresa e quem tem acesso ao Lobby." />
       <OrganizationSection />
+      {linkedin && <LinkedinSection result={linkedin.result} />}
       {can("users:invite") && <AccessSection />}
     </div>
   );

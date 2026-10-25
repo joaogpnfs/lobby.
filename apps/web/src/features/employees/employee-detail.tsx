@@ -22,8 +22,10 @@ import {
 } from "@/components/ui/dialog";
 import { InviteDialog } from "@/features/access/invite-dialog";
 import { useCan } from "@/features/auth/api";
+import { EmployeeDocuments } from "@/features/documents/documents-list";
 import { formatDate } from "@/lib/labels";
 import { useDeleteEmployee, useEmployee, useTerminateEmployee } from "./api";
+import { ProfessionalProfileSection } from "./professional-profile";
 
 export function EmployeeDetail({ id }: { id: string }) {
   const employee = useEmployee(id);
@@ -130,6 +132,8 @@ function Profile({ employee: e }: { employee: EmployeeDto }) {
           )}
         </Section>
       </div>
+      <ProfessionalProfileSection employee={e} />
+      <EmployeeDocuments employee={{ id: e.id, name: e.name }} />
     </div>
   );
 }

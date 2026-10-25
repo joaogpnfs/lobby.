@@ -5,11 +5,17 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { loginSchema, type LoginInput } from "@lobby/types";
-import { Button } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
 import { authErrorMessage, safeNext, useLogin } from "../api";
 import { FormField as Field } from "@/components/common/form-field";
 
-export function LoginForm({ next }: { next?: string }) {
+const LINKEDIN_RESULT: Record<string, string> = {
+  "not-linked":
+    "Este LinkedIn não está conectado a nenhuma conta. Entre com e-mail e senha e conecte em Configurações.",
+  error: "Não foi possível entrar com o LinkedIn. Tente de novo.",
+};
+
+export function LoginForm({ next, linkedin }: { next?: string; linkedin?: { result?: string } }) {
   const router = useRouter();
   const login = useLogin();
   const { register, handleSubmit, formState } = useForm<LoginInput>({ resolver: zodResolver(loginSchema) });
@@ -41,6 +47,12 @@ export function LoginForm({ next }: { next?: string }) {
         {...register("password")}
       />
 
+      {linkedin?.result && LINKEDIN_RESULT[linkedin.result] && (
+        <p role="alert" className="rounded-lg bg-destructive/10 px-3 py-2 text-sm text-destructive">
+          {LINKEDIN_RESULT[linkedin.result]}
+        </p>
+      )}
+
       {login.isError && (
         <p role="alert" className="rounded-lg bg-destructive/10 px-3 py-2 text-sm text-destructive">
           {authErrorMessage(login.error)}
@@ -50,6 +62,15 @@ export function LoginForm({ next }: { next?: string }) {
       <Button type="submit" size="lg" className="h-10" disabled={login.isPending}>
         {login.isPending ? "Entrando…" : "Entrar"}
       </Button>
+
+      {linkedin && (
+        <a
+          href="/api/v1/auth/linkedin/login"
+          className={buttonVariants({ variant: "outline", size: "lg", className: "h-10" })}
+        >
+          Entrar com LinkedIn
+        </a>
+      )}
 
       <p className="text-sm text-muted-foreground">
         Ainda não usa o Lobby?{" "}

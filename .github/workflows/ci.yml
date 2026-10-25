@@ -38,6 +38,11 @@ jobs:
       DATABASE_URL_TEST: postgresql://lobby:lobby@localhost:5432/lobby_test
       REDIS_URL: redis://localhost:6379
       JWT_ACCESS_SECRET: ci-only-access-secret-at-least-32-characters
+      AWS_REGION: us-east-1
+      AWS_ACCESS_KEY_ID: lobby
+      AWS_SECRET_ACCESS_KEY: lobby-s3-secret
+      AWS_S3_BUCKET: lobby-documents
+      S3_ENDPOINT: http://localhost:8333
 
     steps:
       - uses: actions/checkout@v4
@@ -52,6 +57,10 @@ jobs:
       - run: pnpm lint
       - run: pnpm typecheck
       - run: pnpm --filter @lobby/api db:deploy
+      - name: S3 (SeaweedFS)
+        run: |
+          docker run -d -p 8333:8333 -v "$PWD/docker/seaweedfs-s3.json:/etc/seaweedfs/s3.json:ro" chrislusf/seaweedfs:latest server -dir=/data -s3 -s3.config=/etc/seaweedfs/s3.json
+          for i in $(seq 1 30); do aws --endpoint-url $S3_ENDPOINT s3 mb s3://$AWS_S3_BUCKET && exit 0; sleep 2; done; exit 1
       - run: pnpm test
       - run: pnpm build
       # Runtime deps only: dev tooling (eslint) carries an unpatched braces advisory.

@@ -1,5 +1,10 @@
 import { NextResponse, type NextRequest } from "next/server";
 
+const { S3_ENDPOINT, AWS_S3_BUCKET, AWS_REGION = "us-east-1" } = process.env;
+const storageOrigin = S3_ENDPOINT
+  ? new URL(S3_ENDPOINT).origin
+  : `https://${AWS_S3_BUCKET}.s3.${AWS_REGION}.amazonaws.com`;
+
 export function proxy(request: NextRequest) {
   const nonce = Buffer.from(crypto.randomUUID()).toString("base64");
   const isDev = process.env.NODE_ENV === "development";
@@ -7,9 +12,9 @@ export function proxy(request: NextRequest) {
     "default-src 'self'",
     `script-src 'self' 'nonce-${nonce}' 'strict-dynamic'${isDev ? " 'unsafe-eval'" : ""}`,
     "style-src 'self' 'unsafe-inline'",
-    "img-src 'self' blob: data:",
+    "img-src 'self' blob: data: https://media.licdn.com",
     "font-src 'self'",
-    "connect-src 'self'",
+    `connect-src 'self' ${storageOrigin}`,
     "object-src 'none'",
     "base-uri 'self'",
     "form-action 'self'",

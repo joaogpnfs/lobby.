@@ -78,6 +78,61 @@ const cpf = z
   .refine(isValidCpf, "CPF inválido")
   .transform((v) => v.replace(/\D/g, ""));
 
+export const linkedinUrl = z
+  .string()
+  .trim()
+  .max(200)
+  .regex(
+    /^https:\/\/(www\.)?linkedin\.com\/in\/[\w%-]+\/?$/,
+    "Use o link do perfil, como https://www.linkedin.com/in/seu-nome",
+  );
+
+const yearMonth = z
+  .string()
+  .regex(/^\d{4}(-\d{2})?$/)
+  .nullable();
+
+export const professionalProfileSchema = z
+  .object({
+    headline: z.string().trim().max(220).nullable(),
+    summary: z.string().trim().max(2600).nullable(),
+    experiences: z
+      .array(
+        z
+          .object({
+            title: z.string().trim().min(1).max(200),
+            company: z.string().trim().max(200).nullable(),
+            start: yearMonth,
+            end: yearMonth,
+          })
+          .strict(),
+      )
+      .max(50),
+    education: z
+      .array(
+        z
+          .object({
+            school: z.string().trim().min(1).max(200),
+            degree: z.string().trim().max(300).nullable(),
+            period: z.string().trim().max(40).nullable(),
+          })
+          .strict(),
+      )
+      .max(20),
+    skills: z.array(z.string().trim().min(1).max(80)).max(50),
+  })
+  .strict();
+export type ProfessionalProfile = z.infer<typeof professionalProfileSchema>;
+
+export const saveProfessionalProfileSchema = z
+  .object({ profile: professionalProfileSchema, linkedinUrl: linkedinUrl.nullish() })
+  .strict();
+export type SaveProfessionalProfileInput = z.infer<typeof saveProfessionalProfileSchema>;
+
+export const MAX_PROFILE_PDF_SIZE = 5 * 1024 * 1024;
+
+export type ProfileImport = { profile: ProfessionalProfile; linkedinUrl: string | null };
+
 const employeeFields = {
   firstName: z.string().trim().min(1).max(80),
   lastName: z.string().trim().min(1).max(80),
@@ -92,6 +147,7 @@ const employeeFields = {
   positionId: optionalId,
   branchId: optionalId,
   managerId: optionalId,
+  linkedinUrl: linkedinUrl.nullish(),
 };
 
 export const createEmployeeSchema = z.object(employeeFields).strict();
@@ -138,6 +194,9 @@ export type EmployeeDto = EmployeeListItem & {
   terminationDate: string | null;
   terminationReason: string | null;
   hasAccess: boolean;
+  linkedinUrl: string | null;
+  professionalProfile: ProfessionalProfile | null;
+  canEditProfile: boolean;
   reports: Ref[];
 };
 

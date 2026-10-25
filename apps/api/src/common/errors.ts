@@ -17,6 +17,8 @@ export class AppException extends HttpException {
 
 export const notFound = (what: string) =>
   new AppException(ErrorCode.NOT_FOUND, `${what} not found`, HttpStatus.NOT_FOUND);
+export const invalid = (message: string) =>
+  new AppException(ErrorCode.VALIDATION_ERROR, message, HttpStatus.BAD_REQUEST);
 export const conflict = (message: string) => new AppException(ErrorCode.CONFLICT, message, HttpStatus.CONFLICT);
 export const forbidden = (message = "You do not have permission to do this") =>
   new AppException(ErrorCode.FORBIDDEN, message, HttpStatus.FORBIDDEN);
